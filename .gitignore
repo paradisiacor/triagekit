@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+*.pem.private
+*.user
+.vs/
+Reports/
+artifacts/
+bin/
+obj/
+server/.dev.vars
+server/.wrangler/
+server/node_modules/
+ui/node_modules/
+ui/preview/
+.wrangler/

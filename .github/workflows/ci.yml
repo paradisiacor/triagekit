@@ -1,0 +1,26 @@
+name: ci
+on: [push, pull_request]
+permissions: { contents: read }
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm, cache-dependency-path: ui/package-lock.json }
+      - run: npm ci
+        working-directory: ui
+      - run: npx vite build
+        working-directory: ui
+      - uses: actions/setup-dotnet@v4
+        with: { global-json-file: global.json }
+      - run: dotnet test TriageKit.sln -c Release
+      - run: dotnet publish src/TriageKit.Cli -c Release -o artifacts/TriageKit
+      # Smoke test on a real Windows runner: quick scan, no network lookups, must produce a report.
+      - run: artifacts/TriageKit/TriageKit.exe --quick --offline --no-open --no-pause --yes --out artifacts/smoke
+      - run: if (-not (Get-ChildItem artifacts/smoke -Recurse -Filter report.html)) { exit 1 }
+        shell: pwsh
+      - run: Get-FileHash artifacts/TriageKit/TriageKit.exe -Algorithm SHA256 | Format-List
+        shell: pwsh
+      - uses: actions/upload-artifact@v4
+        with: { name: TriageKit-win-x64, path: artifacts/TriageKit }

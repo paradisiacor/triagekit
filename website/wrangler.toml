@@ -1,0 +1,7 @@
+name = "triagekit-web"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[assets]
+directory = "./site"
+not_found_handling = "404-page"

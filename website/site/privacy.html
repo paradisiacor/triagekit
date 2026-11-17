@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TriageKit Privacy Policy</title>
+<meta name="description" content="What TriageKit and this website collect, and what they never collect.">
+<meta name="referrer" content="no-referrer">
+<link rel="preload" href="/assets/geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7z' fill='%233d8bff'/%3E%3Cpath d='m10.5 16 4 4 7-8' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="TriageKit home">
+      <svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7z" fill="#3d8bff"/><path d="m10.5 16 4 4 7-8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      TriageKit
+    </a>
+    <nav class="links" aria-label="Main">
+      <a href="/#why">Why TriageKit</a>
+      <a class="keep" href="/features">Features</a>
+      <a href="/#privacy">Privacy</a>
+      <a href="/#open">Open source</a>
+      <a class="btn btn-sm" href="/#get">Get TriageKit</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap doc">
+<div class="label">Privacy policy</div>
+<h1 class="s6">What we collect, and what we don't.</h1>
+<p class="label updated">Updated 17 November 2026</p>
+<div class="note">TriageKit is a free, open-source project (GPL-3.0). There are no accounts, so we hold no personal data about users. You can check every point below in the source code.</div>
+<h2>The short version</h2>
+<ul>
+<li><b>No telemetry.</b> The app sends no usage statistics, crash reports or analytics.</li>
+<li><b>Reports stay on your PC</b> (or USB stick) unless you share them yourself.</li>
+<li><b>Files are never uploaded.</b> Online lookups send only SHA-256 fingerprints, and are off until you agree.</li>
+<li><b>This website</b> sets no cookies, runs no analytics and loads nothing from other companies. Fonts are served from this site, and its one small script only draws the 3D planet; it sends nothing.</li>
+</ul>
+<h2>The app</h2>
+<p><b>What the scan reads.</b> The scan runs on your PC and reads settings, file names, signatures and command lines. The accounts and sessions check looks for signs of session theft by names, paths and sizes only: it never reads cookie values, saved passwords or login tokens.</p>
+<p><b>Online lookups (opt-in).</b> When you turn them on, the SHA-256 fingerprints of files the scan finds suspicious are checked with CIRCL hashlookup. If you add your own VirusTotal or MalwareBazaar key, fingerprints are also checked there, under those services' terms. File contents are never sent.</p>
+<p><b>Update check.</b> Once a day the app asks the update service for the newest version. The request contains nothing about your PC. You can switch it off in Settings.</p>
+<p><b>No licences.</b> Since version 0.14 TriageKit is free for everyone: there is no licence check and no device ID. Licence records from the earlier beta are no longer used and are being deleted.</p>
+<h2>Where the services run</h2>
+<p>The update service runs on Cloudflare Workers with a Cloudflare D1 database. Like any web server, Cloudflare processes your IP address to deliver a request, and the service uses it briefly to limit abuse (short-lived rate-limit counters); TriageKit doesn't store it.</p>
+<h2>Shareable reports</h2>
+<p>The shareable report removes the PC name, user names, e-mail addresses, IP and MAC addresses, account SIDs, device IDs, serial numbers, network share names, the private part of web links and passwords typed into commands, and leaves out raw collected data. Check it before you share it: file and program names are kept because they're what a helper needs to see.</p>
+<h2>Your choices</h2>
+<ul><li>Leave online lookups off, or switch them off at any time in Settings.</li><li>Switch off update checks in Settings.</li><li>Delete reports by deleting the report folders; the portable edition keeps nothing anywhere else except an optional cache of system-file checks in an administrator-only folder.</li></ul>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>TriageKit · free &amp; open source · a clean result lowers risk but can't prove a PC is free of malware.</span>
+    <nav aria-label="Legal"><a href="/features">Features</a><a href="/privacy">Privacy</a><a href="/security">Security</a></nav>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,71 @@
+{
+  // TriageKit built-in rule pack. Patterns are case-insensitive .NET regular expressions.
+  "version": "2026.11.14",
+
+  // Ports frequently used by commodity remote-access trojans (AsyncRAT, njRAT, DarkComet, Quasar, Remcos...).
+  "ratPorts": ["1177", "1604", "2404", "3460", "4444", "4782", "5552", "6606", "7707", "8808", "9999", "31337", "1337", "5050", "8888", "4449", "5000"],
+
+  "minerProcessPatterns": ["^(xmrig|xmr-stak|nbminer|t-rex|phoenixminer|lolminer|gminer|nanominer|cpuminer|ethminer|teamredminer|srbminer)"],
+
+  "remoteAccessTools": [
+    { "name": "AnyDesk", "pattern": "anydesk", "process": "anydesk" },
+    { "name": "TeamViewer", "pattern": "teamviewer", "process": "teamviewer" },
+    { "name": "RustDesk", "pattern": "rustdesk", "process": "rustdesk" },
+    { "name": "Parsec", "pattern": "parsec", "process": "parsecd|pservice" },
+    { "name": "UltraViewer", "pattern": "ultraviewer", "process": "ultraviewer" },
+    { "name": "Splashtop", "pattern": "splashtop", "process": "srservice|strwinclt" },
+    { "name": "ScreenConnect / ConnectWise Control", "pattern": "screenconnect|connectwise control", "process": "screenconnect" },
+    { "name": "LogMeIn / GoTo", "pattern": "logmein|gotoassist|goto resolve", "process": "logmein|gotoassist" },
+    { "name": "Atera", "pattern": "atera", "process": "ateraagent" },
+    { "name": "NetSupport", "pattern": "netsupport", "process": "client32" },
+    { "name": "Radmin", "pattern": "radmin", "process": "rserver3|radmin" },
+    { "name": "Ammyy Admin", "pattern": "ammyy", "process": "aa_v3|ammyy" },
+    { "name": "VNC", "pattern": "realvnc|tightvnc|ultravnc|tigervnc", "process": "vncserver|winvnc|tvnserver" },
+    { "name": "Chrome Remote Desktop", "pattern": "chrome remote desktop", "process": "remoting_host" },
+    { "name": "Supremo", "pattern": "supremo", "process": "supremo" },
+    { "name": "DWService", "pattern": "dwservice|dwagent", "process": "dwagent" },
+    { "name": "MeshCentral agent", "pattern": "meshagent|mesh agent", "process": "meshagent" },
+    { "name": "Remote Utilities", "pattern": "remote utilities", "process": "rutserv|rfusclient" },
+    { "name": "Zoho Assist", "pattern": "zoho assist", "process": "zaservice" },
+    { "name": "SimpleHelp", "pattern": "simplehelp", "process": "remote access|simplegatewayservice" },
+    { "name": "Action1", "pattern": "action1", "process": "action1_agent" }
+  ],
+
+  "dualUseToolPatterns": ["mimikatz", "cheat engine", "process hacker", "system informer", "x64dbg", "ollydbg", "nirsoft", "wireshark", "nmap", "metasploit", "cobalt strike", "hashcat", "lazagne"],
+
+  "hostsSensitiveDomains": ["google", "microsoft", "windowsupdate", "live\\.com", "bank", "paypal", "discord", "steam", "battle\\.net", "blizzard", "epicgames", "virustotal", "malwarebytes", "avast", "kaspersky", "eset", "bitdefender", "sophos", "norton", "mcafee", "binance", "coinbase", "metamask"],
+
+  // Windows process names that malware borrows, and the only folders (relative to %SystemRoot%) they run from.
+  "systemProcessLocations": {
+    "svchost.exe":   ["System32", "SysWOW64"],
+    "lsass.exe":     ["System32"],
+    "csrss.exe":     ["System32"],
+    "winlogon.exe":  ["System32"],
+    "wininit.exe":   ["System32"],
+    "services.exe":  ["System32"],
+    "smss.exe":      ["System32"],
+    "explorer.exe":  [""],
+    "taskhostw.exe": ["System32"],
+    "dllhost.exe":   ["System32", "SysWOW64"],
+    "conhost.exe":   ["System32"],
+    "rundll32.exe":  ["System32", "SysWOW64"],
+    "spoolsv.exe":   ["System32"],
+    "lsm.exe":       ["System32"],
+    "sihost.exe":    ["System32"],
+    "ctfmon.exe":    ["System32", "SysWOW64"],
+    "dwm.exe":       ["System32"]
+  },
+
+  // Defender detection-name suffixes meaning "heuristic / machine-learning / reputation" rather than a named family.
+  "genericDetectionSuffixes": ["!ml", "!rfn", "!cl", "!mtb", "!pz", "!bit", "!atmn", "!msr", "!amtb"],
+
+  "suspiciousPowerShellPatterns": [
+    "downloadstring", "downloadfile", "invoke-webrequest.+\\|\\s*iex", "frombase64string", "amsiutils", "amsiinitfailed",
+    "invoke-mimikatz", "\\s-enc(odedcommand)?\\s", "reflection\\.assembly\\]::load", "virtualalloc", "add-mppreference.+exclusion",
+    "set-mppreference.+disable", "net\\.webclient", "start-bitstransfer.+http"
+  ],
+
+  "browserStoreUpdateUrls": ["clients2\\.google\\.com", "edge\\.microsoft\\.com", "extension-updates\\.opera\\.com"],
+
+  "knownGoodWmiConsumers": ["SCM Event Log Consumer", "BVTConsumer"]
+}

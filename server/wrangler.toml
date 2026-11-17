@@ -1,0 +1,28 @@
+name = "triagekit-api"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "triagekit-licences"
+database_id = "f11cc3b3-2fed-4544-b46b-87203d015614"
+
+[[durable_objects.bindings]]
+name = "VAULT"
+class_name = "Vault"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Vault"]
+
+# Rate limits shared by all isolates (Workers Rate Limiting binding, free plan). Period must be 10 or 60 seconds.
+[[ratelimits]]
+name = "RL_IP"
+namespace_id = "7301"
+simple = { limit = 30, period = 60 }
+
+[[ratelimits]]
+name = "RL_ADMIN"
+namespace_id = "7303"
+simple = { limit = 120, period = 60 }

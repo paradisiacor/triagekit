@@ -1,0 +1,20 @@
+{
+  "VirusTotalApiKey": "",
+  "VirusTotalMaxLookups": 8,
+  "VirusTotalDelaySeconds": 16,
+  "MalwareBazaarAuthKey": "",
+  "OnlineLookups": false,
+  "OnlineLookupsAsked": false,
+  "ReputationDefender": true,
+  "ReputationCircl": true,
+  "ReputationMaxFiles": 60,
+  "ReputationServerUrl": "",
+  "LicenseKey": "",
+  "AskCaseInfo": false,
+  "EventLogDays": 30,
+  "RecentFileDays": 14,
+  "RecentFileMaxItems": 400,
+  "RunDefenderQuickScan": false,
+  "RunAutoruns": true,
+  "RunYara": true
+}

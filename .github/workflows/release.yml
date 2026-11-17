@@ -1,0 +1,86 @@
+name: release
+# Builds a release from a version tag (v1.2.3) on GitHub-hosted runners, so anyone can check that the published exe
+# comes from this source. Signing goes through SignPath Foundation (see CODE_SIGNING_POLICY.md); until the SignPath
+# project is set up, the release is published unsigned and marked as such.
+on:
+  push:
+    tags: ['v*.*.*']
+permissions:
+  contents: write      # create the GitHub release
+  actions: read
+jobs:
+  build:
+    runs-on: windows-latest
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag must match the version in Directory.Build.props
+        shell: pwsh
+        run: |
+          $v = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version
+          if ("v$v" -ne "${{ github.ref_name }}") { throw "Tag ${{ github.ref_name }} does not match version $v" }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm, cache-dependency-path: ui/package-lock.json }
+      - run: npm ci
+        working-directory: ui
+      - run: npx vite build
+        working-directory: ui
+      - uses: actions/setup-dotnet@v4
+        with: { global-json-file: global.json }
+      - run: dotnet test TriageKit.sln -c Release
+      - run: dotnet publish src/TriageKit.Cli -c Release -o artifacts/TriageKit
+      - run: artifacts/TriageKit/TriageKit.exe --quick --offline --no-open --no-pause --yes --out artifacts/smoke
+      - uses: actions/upload-artifact@v4
+        id: upload
+        with: { name: TriageKit-unsigned, path: artifacts/TriageKit/TriageKit.exe, if-no-files-found: error }
+
+  sign:
+    needs: build
+    runs-on: ubuntu-latest
+    # Runs only once the SignPath project exists: set the repository variable SIGNPATH_ORGANIZATION_ID and the
+    # secret SIGNPATH_API_TOKEN (Settings > Secrets and variables > Actions).
+    if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+    steps:
+      - uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: triagekit
+          signing-policy-slug: release-signing
+          github-artifact-id: ${{ needs.build.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed
+      - uses: actions/upload-artifact@v4
+        with: { name: TriageKit-signed, path: signed, if-no-files-found: error }
+
+  publish:
+    needs: [build, sign]
+    if: ${{ always() && needs.build.result == 'success' && needs.sign.result != 'failure' && needs.sign.result != 'cancelled' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: TriageKit-signed, path: out }
+        continue-on-error: true
+      - uses: actions/download-artifact@v4
+        if: ${{ needs.sign.result == 'skipped' }}
+        with: { name: TriageKit-unsigned, path: out }
+      - name: Package
+        id: pkg
+        run: |
+          set -e
+          v="${GITHUB_REF_NAME#v}"
+          cd out
+          test -f TriageKit.exe
+          zip -q "../TriageKit-$v-exe.zip" TriageKit.exe
+          cd ..
+          sha256sum "TriageKit-$v-exe.zip" out/TriageKit.exe | sed 's| out/| |' > SHA256SUMS.txt
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          if [ "${{ needs.sign.result }}" = "success" ]; then echo "note=Signed by SignPath Foundation." >> "$GITHUB_OUTPUT"; else echo "note=Unsigned build (code signing is being set up). Windows SmartScreen will warn." >> "$GITHUB_OUTPUT"; fi
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft --title "TriageKit ${{ steps.pkg.outputs.version }}" \
+            --notes "${{ steps.pkg.outputs.note }} See CHANGELOG.md for what changed. SHA-256 sums are in SHA256SUMS.txt." \
+            "TriageKit-${{ steps.pkg.outputs.version }}-exe.zip" SHA256SUMS.txt

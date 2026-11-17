@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TriageKit</title>
+<meta name="description" content="The second opinion your antivirus can't give. TriageKit finds hidden startup entries, risky settings and signs of malware on Windows, explains each one in plain words, and never changes or uploads anything.">
+<meta name="referrer" content="no-referrer">
+<link rel="preload" href="/assets/geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css">
+<script src="/assets/globe.js" defer></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7z' fill='%233d8bff'/%3E%3Cpath d='m10.5 16 4 4 7-8' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="TriageKit home">
+      <svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7z" fill="#3d8bff"/><path d="m10.5 16 4 4 7-8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      TriageKit
+    </a>
+    <nav class="links" aria-label="Main">
+      <a href="#why">Why TriageKit</a>
+      <a class="keep" href="/features">Features</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#open">Open source</a>
+      <a class="btn btn-sm" href="#get">Get TriageKit</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <div>
+      <div class="label">The second opinion for Windows PCs · free &amp; open source</div>
+      <h1 class="s1">It looks.<br><b>It never touches.</b></h1>
+      <p class="lede">Your antivirus says the PC is clean. TriageKit shows you what it didn't check: hidden startup entries, switched-off protections, exclusions you never added, rogue certificates and booby-trapped documents. Every finding comes with the reason it matters and the exact steps to fix it. Nothing on the PC is changed, deleted or uploaded.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#get">Get TriageKit free</a>
+        <a class="btn" href="#coverage">See what it finds</a>
+      </div>
+      <div class="meta"><span>Free for everyone</span><span>Open source (GPL-3.0)</span><span>Runs from a USB stick</span><span>Your files stay on your PC</span></div>
+    </div>
+    <figure class="shot s2">
+      <img src="/assets/app-overview.jpg" width="2160" height="1350" alt="TriageKit overview: a score of 58 out of 100, rated At risk, with 3 high, 3 medium and 6 low findings and a list of what to fix first.">
+    </figure>
+  </div>
+
+  <section id="why">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="label">Why people use it</div><h2 class="s3">Three moments TriageKit was built for.</h2></div>
+        <p>Antivirus is good at one job: spotting known malicious files. Most real problems we see on PCs sit around that job, in settings, startup and leftovers that no antivirus reports.</p>
+      </div>
+      <div class="pains">
+        <div class="pain"><q>The antivirus found nothing, but something's off.</q><p>Attackers rarely stop at one file. They add Defender exclusions, plant scheduled tasks and slip in certificates. <b>TriageKit checks the places they use to stay</b>, and tells you which ones changed.</p></div>
+        <div class="pain"><q>I have no idea what this means.</q><p>Expert tools show you 900 rows and wish you luck. <b>TriageKit ranks what matters and explains it like a good technician would</b>: what it is, why it's a risk, where to click to fix it.</p></div>
+        <div class="pain"><q>I can't install anything on this PC.</q><p>Customer machines, work laptops, a relative's PC. <b>TriageKit runs from a USB stick</b>, doesn't clash with the installed antivirus, and installs nothing. Reports and your licence stay on the stick, not on their PC.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="coverage">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="label">What a check covers</div><h2 class="s3">Where malware hides, and how a PC is left open.</h2></div>
+        <p>22 security checks, each with many individual tests, run in minutes. Each finding names the exact file, registry key or setting, so you can verify it yourself. These are real finding titles from the app.</p>
+      </div>
+      <div class="areas">
+        <div class="area"><h3>Startup and persistence</h3><p>Run keys, services, scheduled tasks, WMI subscriptions and the less obvious hooks attackers use to survive a reboot.</p><div class="ex h"><i>HIGH</i>Unsigned program starts with Windows: updater.exe</div></div>
+        <div class="area"><h3>Defender and firewall</h3><p>Real-time protection, tamper protection, exclusions and firewall profiles. Malware loves switching these off quietly.</p><div class="ex h"><i>HIGH</i>Defender exclusion: C:\Users\…\Downloads\GameTools</div></div>
+        <div class="area"><h3>Archives and documents</h3><p>Opens ZIPs and Office files in memory to find macros that run on open, plus scripts and shortcuts hidden inside.</p><div class="ex h"><i>HIGH</i>Office document runs automatically when opened: invoice.docm</div></div>
+        <div class="area"><h3>Shortcuts and scripts</h3><p>Shortcuts that secretly launch PowerShell, commands pasted from fake "verify you're human" pages, freshly dropped scripts and files matching signed malware rules.</p><div class="ex h"><i>HIGH</i>Shortcut runs a hidden command: Resume.pdf.lnk</div></div>
+        <div class="area"><h3>Certificates and drivers</h3><p>Root certificates Windows doesn't ship, drivers with known vulnerabilities, unsigned code inside system processes.</p><div class="ex m"><i>MED</i>Root certificate not from Microsoft's list: "DO_NOT_TRUST_FiddlerRoot"</div></div>
+        <div class="area"><h3>Browsers, privacy, logs</h3><p>Force-installed extensions, camera and microphone history, protection switched off, security logs wiped.</p><div class="ex m"><i>MED</i>Defender real-time protection was switched off 2 times</div></div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="teaser" id="features">
+    <div class="stage" aria-hidden="true">
+      <canvas data-globe data-cap="150"></canvas>
+      <div class="glass"><svg viewBox="0 0 120 140"><defs>
+        <linearGradient id="tS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fd3ff" stop-opacity=".55"/><stop offset="1" stop-color="#0b1626" stop-opacity=".9"/></linearGradient>
+        <linearGradient id="tR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bfe9ff"/><stop offset=".5" stop-color="#3d8bff"/><stop offset="1" stop-color="#1b3f7a"/></linearGradient>
+      </defs>
+        <path d="M60 6 14 24v34c0 32 20 57 46 70 26-13 46-38 46-70V24z" fill="url(#tS)" stroke="url(#tR)" stroke-width="2.5"/>
+        <path d="m40 70 14 14 27-30" fill="none" stroke="#e9f6ff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg></div>
+    </div>
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="label">Features</div><h2 class="s3">Twelve categories. One read-only check.</h2></div>
+        <p>From Defender exclusions to stolen browser sessions to why your games stutter. A sneak peek at what's inside; the full list, with real finding titles, is on the features page.</p>
+      </div>
+      <div class="tgrid">
+        <a class="tile" href="/features#protection"><span class="dot g"></span><b>Antivirus &amp; protection</b><span>Defender switched off, exclusions you never added.</span></a>
+        <a class="tile" href="/features#startup"><span class="dot b"></span><b>Startup &amp; persistence</b><span>Run keys, tasks, WMI and the hooks specialists know.</span></a>
+        <a class="tile" href="/features#files"><span class="dot o"></span><b>Files &amp; malware</b><span>Signed rules, reputation, archives and documents.</span></a>
+        <a class="tile new" href="/features#accounts"><small>NEW</small><span class="dot r"></span><b>Accounts &amp; sessions</b><span>Session theft, fake installers, stealer leftovers.</span></a>
+        <a class="tile" href="/features#browsers"><span class="dot c"></span><b>Browsers &amp; privacy</b><span>Risky extensions, hijacked settings, camera and mic.</span></a>
+        <a class="tile" href="/features#network"><span class="dot p"></span><b>Network &amp; certificates</b><span>Who talks out, who gets in, rogue root certificates.</span></a>
+        <a class="tile" href="/features#doctor"><span class="dot c"></span><b>PC Doctor</b><span>Crashes decoded, sensors, RAM, disks, live performance.</span></a>
+        <a class="tile" href="/features#gaming"><span class="dot p"></span><b>Gaming</b><span>Throttling, overlays, Game Mode, account protection.</span></a>
+      </div>
+      <div class="more"><a class="btn btn-primary" href="/features">See all features</a></div>
+    </div>
+  </section>
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="label">How it compares</div><h2 class="s3">Made to sit next to your antivirus.</h2></div>
+        <p>TriageKit doesn't replace your antivirus. It answers the question your antivirus can't: is this PC set up safely, and is anything hiding where file scanners don't look?</p>
+      </div>
+      <div class="tablewrap">
+        <table class="vs">
+          <thead><tr><th></th><th class="us">TriageKit</th><th>Typical antivirus</th><th>Expert tools</th></tr></thead>
+          <tbody>
+            <tr><td>Finds known malware files</td><td class="us yes">Signed rules and hash reputation</td><td class="yes">Yes, its main job</td><td class="warn">Partly, by hand</td></tr>
+            <tr><td>Checks settings, exclusions and startup</td><td class="us yes">Yes, 22 security checks</td><td class="warn">Rarely</td><td class="yes">Yes</td></tr>
+            <tr><td>Explains each finding in plain words</td><td class="us yes">Yes, with steps to fix</td><td class="warn">A threat name</td><td class="no">No</td></tr>
+            <tr><td>Safe to run next to other security software</td><td class="us yes">Yes, read-only</td><td class="no">Usually one at a time</td><td class="yes">Yes</td></tr>
+            <tr><td>Changes or deletes files</td><td class="us yes">Never</td><td class="warn">Yes, quarantine</td><td class="warn">If you click</td></tr>
+            <tr><td>Uploads your files</td><td class="us yes">Never</td><td class="warn">Often by default</td><td class="no">Varies</td></tr>
+            <tr><td>Needs expert knowledge</td><td class="us yes">No</td><td class="yes">No</td><td class="no">Yes</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="fine">"Typical antivirus" and "expert tools" describe common behaviour of each kind of product, not any specific brand. Many antivirus products submit suspicious samples to their cloud unless you turn it off.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap split">
+      <div>
+        <div class="label">Findings you can act on</div>
+        <h2 class="s4">Five things to fix first. Everything else when you want it.</h2>
+        <ul>
+          <li><span class="num">01</span><span><b>A score you can trust</b>Repeats of one problem count once, so seven browser add-ons can't outweigh one real infection.</span></li>
+          <li><span class="num">02</span><span><b>"This is fine" for your own choices</b>Accept your own exclusion once. It stays in the report, marked, and stops costing you points.</span></li>
+          <li><span class="num">03</span><span><b>No false all-clears</b>If a log couldn't be read, the report says so. A failed check never shows up as clean.</span></li>
+          <li><span class="num">04</span><span><b>What changed since last time</b>Every check is compared with the previous one: new, still there, fixed.</span></li>
+        </ul>
+      </div>
+      <figure class="shot s2"><img src="/assets/app-findings.jpg" width="2160" height="1350" alt="TriageKit findings page: grouped highlights with plain-language advice and a full list of findings by severity."></figure>
+    </div>
+  </section>
+
+  <section id="privacy" class="privacy">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="label">Privacy</div><h2 class="s3">Your report stays yours. Even when you share it.</h2></div>
+        <p>Asking a forum or a friend for help usually means pasting your user name, PC name and IP address along with the problem. The shareable report keeps every finding and every fix, and takes out your user name, PC name, IP and MAC addresses, account IDs, network share names, the private part of web links and passwords typed into commands. File names stay, because that's what a helper needs to see.</p>
+      </div>
+      <div class="redact" role="img" aria-label="Example: a path containing the user name marko and the PC name DESKTOP-7Q2K becomes a path with placeholders user1 and PC.">
+        <div class="row"><span class="tag">Your report</span><span class="before">C:\Users\marko\AppData\Roaming\upd.exe → 203.0.113.9 on DESKTOP-7Q2K</span></div>
+        <div class="row"><span class="tag">Shareable</span><span>C:\Users\<span class="ph">&lt;user1&gt;</span>\AppData\Roaming\upd.exe → <span class="ph">&lt;ip&gt;</span> on <span class="ph">&lt;PC&gt;</span></span></div>
+      </div>
+      <div class="never">
+        <div><b>Never changes anything</b><span>No deleting, quarantining or "cleaning". You stay in control of every fix. Defender's own quick scan is an optional extra, off unless you switch it on.</span></div>
+        <div><b>Never uploads files</b><span>Online lookups send a file's fingerprint (SHA-256) only, and only after you say yes.</span></div>
+        <div><b>No telemetry</b><span>No usage statistics, crash reports or analytics. Not in the app, not on this site.</span></div>
+        <div><b>No account</b><span>No sign-up, no licence, no payments. Everything works offline except the lookups you allow.</span></div>
+      </div>
+      <div class="tablewrap">
+        <table class="sends">
+          <thead><tr><th>When</th><th>What is sent</th><th>To</th></tr></thead>
+          <tbody>
+            <tr><td>Online lookups (off until you agree)</td><td>SHA-256 fingerprints of suspicious files. Never the files.</td><td>CIRCL; VirusTotal and MalwareBazaar only with your own key</td></tr>
+            <tr><td>Update check (can be switched off)</td><td>Nothing about the PC; it only asks for the newest version</td><td>TriageKit update service (Cloudflare)</td></tr>
+            <tr><td>Everything else</td><td>Nothing. Reports and history stay on the PC or USB stick.</td><td>Nobody</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="technicians">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="label">For technicians</div><h2 class="s3">Diagnose faster. Show your customer the proof.</h2></div>
+        <p>Plug in the stick, run a check, and hand over a report the customer actually understands. Each scan writes an evidence folder with a SHA-256 fingerprint of every file, and TriageKit refuses to open a report that was changed after the scan.</p>
+      </div>
+      <div class="areas">
+        <div class="area"><h3>Portable</h3><p>One exe, no installer, no settings changed. Reports stay on the stick. Only Windows' own temporary files for the app window remain, in the user's Temp and AppData folders.</p></div>
+        <div class="area"><h3>PC Doctor</h3><p>The "it keeps crashing" call, solved faster: blue screens decoded, GPU driver resets, failing disks, RAM below its rated speed.</p><div class="ex m"><i>MED</i>RAM runs at 2133 MT/s but is rated for 3600 MT/s</div></div>
+        <div class="area"><h3>Daily protection</h3><p>A small background service checks once a day and only alerts when something new appears. Ideal for machines you look after.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="open">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="label">Open source</div><h2 class="s3">Free for everyone. Nothing to hide.</h2></div>
+        <p>A tool that looks this deep into a PC should be one you can check. TriageKit's code is open under the GPL-3.0 licence: anyone can read what it does, build it themselves and confirm that it only reads.</p>
+      </div>
+      <div class="plans three">
+        <div class="plan"><h3>Every check</h3><div class="price">€0<small>for everyone</small></div><p class="for">No plans, no trial, nothing locked.</p><ul><li>Quick, full and deep security checks</li><li>Accounts &amp; sessions protection</li><li>PC Doctor and gaming checks</li><li>Daily protection with alerts</li></ul></div>
+        <div class="plan pro"><h3>Open code</h3><div class="price">GPL-3.0</div><p class="for">Read it, build it, improve it.</p><ul><li>Every line of the app, rules and update service</li><li>Builds made on GitHub from tagged source</li><li>Independent reviews welcome</li><li>Changes stay open, by licence</li></ul></div>
+        <div class="plan"><h3>No catch</h3><div class="price">No ads<small>no tracking</small></div><p class="for">Nothing to sell, nothing collected.</p><ul><li>No account or sign-up</li><li>No telemetry or analytics</li><li>No bundled offers</li><li>Your reports stay on your PC</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="label">Questions</div><h2 class="s3">Before you try it.</h2></div>
+        <p>Short, honest answers to what people ask most.</p>
+      </div>
+      <div class="faq">
+        <details><summary>Is TriageKit an antivirus?</summary><p>No. It doesn't block, quarantine or remove anything, so it never fights with the antivirus you already have. Think of it as a check-up that tells you what to look at and how to fix it.</p></details>
+        <details><summary>Will it slow my PC down?</summary><p>A full check takes about 5 to 10 minutes and you can keep working. Nothing runs in the background unless you turn on daily protection, which checks once a day.</p></details>
+        <details><summary>Can it catch every infection?</summary><p>No tool can, and anyone who promises that is selling something. A clean result lowers the risk a lot; it can't prove a PC is free of malware. When TriageKit couldn't check something, it says so.</p></details>
+        <details><summary>Why does Windows warn me before it starts?</summary><p>Code signing for open-source releases is being set up with SignPath Foundation. Until a release is signed, Windows SmartScreen doesn't recognise the publisher. Compare the file's SHA-256 with the one published for each release.</p></details>
+        <details><summary>Is it really free? What's the catch?</summary><p>There isn't one. Every feature is free for everyone, with no time limit, ads or tracking, and the code is open so anyone can check that. TriageKit is an independent hobby project; it doesn't sell anything.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section id="get" class="s5">
+    <div class="wrap">
+      <div class="dl">
+        <div>
+          <div class="label">Get TriageKit</div>
+          <h2 class="s3">Free, for every Windows PC.</h2>
+          <p>We're testing on real machines before the first public release. Downloads open here and on GitHub with that release, each with its SHA-256 fingerprint so you can check your copy.</p>
+          <p>Found a false alarm or a bug? Issues and pull requests open on GitHub with the first public release.</p>
+        </div>
+        <dl>
+          <dt>Version</dt><dd>0.14 beta</dd>
+          <dt>System</dt><dd>Windows 10 22H2 or 11, 64-bit</dd>
+          <dt>Size</dt><dd>about 55 MB, single exe</dd>
+          <dt>Licence</dt><dd>GPL-3.0, free for everyone</dd>
+          <dt>Updates</dt><dd>signed, verified before install</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>TriageKit · free &amp; open source · a clean result lowers risk but can't prove a PC is free of malware.</span>
+    <nav aria-label="Legal"><a href="/features">Features</a><a href="/privacy">Privacy</a><a href="/security">Security</a></nav>
+  </div>
+</footer>
+</body>
+</html>

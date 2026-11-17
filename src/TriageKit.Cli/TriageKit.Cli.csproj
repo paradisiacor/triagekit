@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>TriageKit</AssemblyName>
+    <RootNamespace>TriageKit.Cli</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <PublishTrimmed>false</PublishTrimmed>
+    <DebugType>embedded</DebugType>
+    <AssemblyTitle>TriageKit - read-only Windows security triage</AssemblyTitle>
+    <Description>Read-only security triage scanner. Produces an offline HTML report. Does not modify the system.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TriageKit.Core\TriageKit.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Desktop UI (built from /ui with Vite) embedded into the exe and served from a private origin. -->
+    <EmbeddedResource Include="Ui\web\**\*" LogicalName="ui/%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Remove="Ui\web.old\**" />
+    <Compile Remove="Ui\web.old\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="config.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.15" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
+  </ItemGroup>
+</Project>

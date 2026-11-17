@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>TriageKit.Core</RootNamespace>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.15" />
+    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.15" />
+    <PackageReference Include="System.Management" Version="10.0.15" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.15" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\report-template.html" LogicalName="report-template.html" />
+    <EmbeddedResource Include="Resources\indicators.json" LogicalName="indicators.json" />
+    <EmbeddedResource Include="Resources\rulepack-public.pem" LogicalName="rulepack-public.pem" />
+    <EmbeddedResource Include="Resources\release-public.pem" LogicalName="release-public.pem" />
+    <EmbeddedResource Include="Resources\rules\*.yar.gz" LogicalName="rules/%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="TriageKit.Tests" />
+  </ItemGroup>
+</Project>

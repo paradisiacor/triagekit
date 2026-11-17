@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TriageKit Report</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --panel: #ffffff; --text: #1b1f24; --muted: #636c76; --line: #e3e6ea; --accent: #2f5bd3;
+    --crit: #8e1b1b; --high: #d1342f; --med: #e08a12; --low: #2f7fd3; --info: #8a939c; --ok: #1f8a4c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111418; --panel: #1a1e24; --text: #e6e9ed; --muted: #9aa4ae; --line: #2a3038; --accent: #6d8ff0; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.45 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); }
+  header { background: var(--panel); border-bottom: 1px solid var(--line); padding: 18px 28px; display: flex; flex-wrap: wrap; gap: 8px 32px; align-items: baseline; }
+  header h1 { font-size: 18px; margin: 0; }
+  header .meta { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 20px; }
+  main { max-width: 1400px; margin: 0 auto; padding: 22px 28px 60px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: 260px 1fr 1fr; }
+  @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 12px; font-weight: 600; }
+  .score { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .score svg { width: 150px; height: 150px; }
+  .verdict { font-size: 18px; font-weight: 650; margin-top: 6px; }
+  .sev-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .sev { border-radius: 8px; padding: 10px; text-align: center; border: 1px solid var(--line); cursor: pointer; }
+  .sev b { display: block; font-size: 24px; }
+  .sev span { font-size: 12px; color: var(--muted); }
+  .sev.active { outline: 2px solid var(--accent); }
+  .bar { display: grid; grid-template-columns: 110px 1fr 36px; gap: 10px; align-items: center; margin: 7px 0; font-size: 13px; }
+  .bar .track { height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; display: flex; }
+  .bar .track i { display: block; height: 100%; }
+  .top li { margin: 6px 0; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 26px 0 0; border-bottom: 1px solid var(--line); }
+  .tab { padding: 9px 14px; border: none; background: none; color: var(--muted); cursor: pointer; font: inherit; border-bottom: 2px solid transparent; }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab small { color: var(--muted); font-weight: 400; }
+  .toolbar { display: flex; gap: 10px; margin: 14px 0; flex-wrap: wrap; }
+  .toolbar input, .toolbar select { padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); font: inherit; }
+  .toolbar input { flex: 1; min-width: 220px; }
+  .finding { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--info); border-radius: 8px; padding: 12px 14px; margin: 8px 0; }
+  .finding .t { font-weight: 600; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .finding .d { color: var(--muted); white-space: pre-wrap; word-break: break-word; margin-top: 4px; font-size: 13px; }
+  .finding .r { margin-top: 6px; font-size: 13px; }
+  .finding details { margin-top: 6px; font-size: 12px; }
+  .finding pre { white-space: pre-wrap; word-break: break-all; background: var(--bg); padding: 8px; border-radius: 6px; max-height: 260px; overflow: auto; }
+  .pill { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; color: #fff; text-transform: uppercase; letter-spacing: .03em; }
+  .cat { font-size: 12px; color: var(--muted); font-weight: 400; }
+  .Critical { --c: var(--crit); } .High { --c: var(--high); } .Medium { --c: var(--med); } .Low { --c: var(--low); } .Info { --c: var(--info); }
+  .finding.Critical, .finding.High, .finding.Medium, .finding.Low, .finding.Info { border-left-color: var(--c); }
+  .pill.Critical, .pill.High, .pill.Medium, .pill.Low, .pill.Info { background: var(--c); }
+  .sev.Critical b, .sev.High b, .sev.Medium b, .sev.Low b, .sev.Info b { color: var(--c); }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 12.5px; }
+  th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); vertical-align: top; word-break: break-word; max-width: 420px; }
+  th { background: var(--bg); position: sticky; top: 0; cursor: pointer; user-select: none; font-weight: 600; }
+  tr.rk-Critical td:first-child, tr.rk-High td:first-child { box-shadow: inset 4px 0 0 var(--high); }
+  tr.rk-Medium td:first-child { box-shadow: inset 4px 0 0 var(--med); }
+  .tablewrap { max-height: 70vh; overflow: auto; border-radius: 8px; }
+  .kv { display: grid; grid-template-columns: 220px 1fr; gap: 6px 16px; font-size: 13px; }
+  .kv div:nth-child(odd) { color: var(--muted); }
+  .empty { color: var(--muted); padding: 20px; text-align: center; }
+  a { color: var(--accent); }
+  footer { color: var(--muted); font-size: 12px; margin-top: 40px; }
+  @media print { .tabs, .toolbar { display: none; } .view { display: block !important; } th { position: static; } .tablewrap { max-height: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Security Triage Report</h1>
+  <div class="meta" id="meta"></div>
+</header>
+<main>
+  <div class="grid">
+    <div class="card score"><h2>Security score</h2><div id="gauge"></div><div class="verdict" id="verdict"></div><div class="cat" id="verdictNote"></div></div>
+    <div class="card"><h2>Findings by severity</h2><div class="sev-row" id="sevRow"></div><h2 style="margin-top:18px">By category</h2><div id="catBars"></div></div>
+    <div class="card"><h2>What to do first</h2><ol class="top" id="top"></ol></div>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+  <section id="views"></section>
+  <footer id="footer"></footer>
+</main>
+<script>
+const DATA = "__TRIAGE_DATA__";
+const SEV = ['Critical', 'High', 'Medium', 'Low', 'Info'];
+const COLORS = { Critical: 'var(--crit)', High: 'var(--high)', Medium: 'var(--med)', Low: 'var(--low)', Info: 'var(--info)' };
+
+// All untrusted values (file names, extension names, command lines) go through textContent - never innerHTML.
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null) e.append(k instanceof Node ? k : document.createTextNode(String(k)));
+  return e;
+}
+const arr = v => v == null ? [] : Array.isArray(v) ? v : [v];
+const fmt = v => v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
+
+function header() {
+  const m = DATA.Meta || {};
+  document.title = `Triage - ${m.ComputerName || ''} - ${m.Started || ''}`;
+  document.getElementById('title').textContent = m.Redacted ? 'Security Triage (shareable copy)' : `Security Triage: ${m.ComputerName || 'Unknown device'}`;
+  const parts = [['Scanned', m.Started], ['Duration', m.DurationSeconds != null ? m.DurationSeconds + ' s' : null], ['Operator', m.Operator],
+                 ['Case', m.CaseId], ['Technician', m.Technician], ['Kit', m.KitVersion], ['Edition', m.Edition]];
+  const meta = document.getElementById('meta');
+  for (const [k, v] of parts) if (v && !(m.Redacted && (k === 'Operator'))) meta.append(el('span', {}, el('b', { text: k + ': ' }), v));
+  if (m.Redacted) meta.append(el('span', {}, el('b', { text: 'Privacy: ' }), 'names, addresses and device details removed; raw data left out'));
+}
+
+function gauge() {
+  const s = DATA.Score, r = 62, c = 2 * Math.PI * r;
+  const col = DATA.Counts.Critical ? 'var(--crit)' : s >= 85 ? 'var(--ok)' : s >= 60 ? 'var(--med)' : 'var(--high)';
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg'); svg.setAttribute('viewBox', '0 0 150 150');
+  const mk = (attrs) => { const x = document.createElementNS(ns, 'circle'); for (const k in attrs) x.setAttribute(k, attrs[k]); return x; };
+  svg.append(mk({ cx: 75, cy: 75, r, fill: 'none', stroke: 'var(--line)', 'stroke-width': 12 }));
+  svg.append(mk({ cx: 75, cy: 75, r, fill: 'none', stroke: col, 'stroke-width': 12, 'stroke-linecap': 'round',
+                  'stroke-dasharray': `${c * s / 100} ${c}`, transform: 'rotate(-90 75 75)' }));
+  const t = document.createElementNS(ns, 'text'); t.setAttribute('x', 75); t.setAttribute('y', 86); t.setAttribute('text-anchor', 'middle');
+  t.setAttribute('font-size', '38'); t.setAttribute('font-weight', '700'); t.setAttribute('fill', 'currentColor'); t.textContent = s;
+  svg.append(t);
+  document.getElementById('gauge').append(svg);
+  const v = document.getElementById('verdict'); v.textContent = DATA.Verdict; v.style.color = col;
+  const notes = { 'Likely compromised': 'Critical indicators found. Isolate the device and investigate.',
+                  'At risk': 'Several significant issues need attention.', 'Needs attention': 'No critical indicators, but review the findings.',
+                  'Looks clean': 'No significant issues detected by this scan.',
+                  'Incomplete check': 'Nothing bad found in what was checked, but parts of the check could not run. See the Info items.' };
+  document.getElementById('verdictNote').textContent = notes[DATA.Verdict] || '';
+}
+
+let sevFilter = null;
+function overview() {
+  const row = document.getElementById('sevRow');
+  for (const s of SEV) {
+    const box = el('div', { class: `sev ${s}`, onclick: () => { sevFilter = sevFilter === s ? null : s; document.querySelectorAll('.sev').forEach(x => x.classList.toggle('active', x === box && sevFilter)); showTab('findings'); renderFindings(); } },
+      el('b', { text: DATA.Counts[s] || 0 }), el('span', { text: s }));
+    row.append(box);
+  }
+  const cats = {};
+  for (const f of arr(DATA.Findings)) { cats[f.Category] = cats[f.Category] || {}; cats[f.Category][f.Severity] = (cats[f.Category][f.Severity] || 0) + 1; }
+  const max = Math.max(1, ...Object.values(cats).map(o => Object.values(o).reduce((a, b) => a + b, 0)));
+  const bars = document.getElementById('catBars');
+  for (const [cat, o] of Object.entries(cats).sort((a, b) => Object.values(b[1]).reduce((x, y) => x + y, 0) - Object.values(a[1]).reduce((x, y) => x + y, 0))) {
+    const total = Object.values(o).reduce((a, b) => a + b, 0);
+    const track = el('div', { class: 'track' });
+    for (const s of SEV) if (o[s]) { const i = el('i'); i.style.width = (100 * o[s] / max) + '%'; i.style.background = COLORS[s]; i.title = `${o[s]} ${s}`; track.append(i); }
+    bars.append(el('div', { class: 'bar' }, el('span', { text: cat }), track, el('span', { text: total })));
+  }
+  const top = document.getElementById('top');
+  const hl = arr(DATA.Highlights);
+  if (!hl.length) top.append(el('li', { text: 'Nothing important to fix. Keep Windows and your apps updated.' }));
+  for (const h of hl) top.append(el('li', {}, el('span', { class: `pill ${h.Severity}`, text: h.Severity }), ' ', el('b', { text: h.Title }),
+    el('div', { class: 'cat', text: h.Recommendation || '' })));
+}
+
+function renderFindings() {
+  const v = document.getElementById('view-findings'); v.textContent = '';
+  const q = (document.getElementById('fq')?.value || '').toLowerCase();
+  const cat = document.getElementById('fc')?.value || '';
+  const list = arr(DATA.Findings).filter(f => (!sevFilter || f.Severity === sevFilter) && (!cat || f.Category === cat) &&
+    (!q || (f.Title + ' ' + f.Detail + ' ' + fmt(f.Evidence)).toLowerCase().includes(q)));
+  if (!list.length) { v.append(el('div', { class: 'empty', text: 'No findings match the current filter.' })); return; }
+  for (const f of list) {
+    const box = el('div', { class: `finding ${f.Severity}`, style: f.Accepted ? 'opacity:.6' : '' },
+      el('div', { class: 't' }, el('span', { class: `pill ${f.Severity}`, text: f.Severity }), f.Accepted ? el('span', { class: 'pill Info', text: 'Accepted' }) : null, f.Title, el('span', { class: 'cat', text: f.Category }), f.Mitre ? el('a', { class: 'cat', href: 'https://attack.mitre.org/techniques/' + String(f.Mitre).replace('.', '/') + '/', target: '_blank', rel: 'noopener noreferrer', text: 'ATT&CK ' + f.Mitre }) : null));
+    if (f.Accepted) box.append(el('div', { class: 'cat', text: 'Accepted: ' + (f.AcceptedReason || 'by you') + ' (not counted in the score)' }));
+    if (f.Detail) box.append(el('div', { class: 'd', text: f.Detail }));
+    if (f.Recommendation) box.append(el('div', { class: 'r' }, el('b', { text: 'What to do: ' }), f.Recommendation));
+    if (f.Evidence) {
+      const ev = f.Evidence; const pre = el('pre', { text: JSON.stringify(ev, null, 2) });
+      const d = el('details', {}, el('summary', { text: 'Evidence' }), pre);
+      if (ev.Link) d.append(el('a', { href: ev.Link, target: '_blank', rel: 'noopener noreferrer', text: 'Open on VirusTotal' }));
+      box.append(d);
+    }
+    v.append(box);
+  }
+}
+
+function table(rows, opts = {}) {
+  rows = arr(rows);
+  if (!rows.length) return el('div', { class: 'empty', text: 'Nothing to show.' });
+  const cols = opts.cols || [...new Set(rows.flatMap(r => Object.keys(r || {})))];
+  let sortCol = null, dir = 1, query = '';
+  const wrap = el('div');
+  const input = el('input', { placeholder: `Search ${rows.length} rows...`, oninput: e => { query = e.target.value.toLowerCase(); draw(); } });
+  const riskSel = el('select', { onchange: draw }, el('option', { value: '', text: 'All risk levels' }), ...SEV.map(s => el('option', { value: s, text: s + ' only' })));
+  const tw = el('div', { class: 'tablewrap' });
+  wrap.append(el('div', { class: 'toolbar' }, input, cols.includes('Risk') ? riskSel : null), tw);
+  function draw() {
+    let r = rows.filter(x => (!query || cols.some(c => fmt(x[c]).toLowerCase().includes(query))) && (!riskSel.value || x.Risk === riskSel.value));
+    if (sortCol) r = [...r].sort((a, b) => {
+      if (sortCol === 'Risk') return dir * (SEV.indexOf(a.Risk) - SEV.indexOf(b.Risk));
+      return dir * fmt(a[sortCol]).localeCompare(fmt(b[sortCol]), undefined, { numeric: true });
+    });
+    const t = el('table');
+    t.append(el('thead', {}, el('tr', {}, cols.map(c => el('th', { text: c + (sortCol === c ? (dir > 0 ? ' ▲' : ' ▼') : ''), onclick: () => { dir = sortCol === c ? -dir : 1; sortCol = c; draw(); } })))));
+    const tb = el('tbody');
+    for (const x of r.slice(0, 3000)) tb.append(el('tr', { class: x.Risk ? 'rk-' + x.Risk : '' }, cols.map(c => el('td', { text: fmt(x[c]) }))));
+    t.append(tb); tw.textContent = ''; tw.append(t);
+  }
+  if (cols.includes('Risk')) { sortCol = 'Risk'; }
+  draw();
+  return wrap;
+}
+
+function kv(obj) {
+  const g = el('div', { class: 'kv' });
+  for (const [k, v] of Object.entries(obj || {})) {
+    if (Array.isArray(v) || (v && typeof v === 'object')) continue;
+    g.append(el('div', { text: k }), el('div', { text: fmt(v) }));
+  }
+  return el('div', { class: 'card' }, g);
+}
+function section(title, node) { return [el('h3', { text: title }), node]; }
+
+const D = DATA.Data || {};
+const pick = (name) => D[name] || {};
+const TABS = [
+  ['findings', 'Findings', () => arr(DATA.Findings).length, v => {
+    const cats = [...new Set(arr(DATA.Findings).map(f => f.Category))].sort();
+    v.parentElement.insertBefore(el('div', { class: 'toolbar', id: 'ftool' },
+      el('input', { id: 'fq', placeholder: 'Search findings...', oninput: renderFindings }),
+      el('select', { id: 'fc', onchange: renderFindings }, el('option', { value: '', text: 'All categories' }), cats.map(c => el('option', { value: c, text: c })))), v);
+    renderFindings();
+  }],
+  ['processes', 'Processes', () => arr(D['Running processes']).length, v => v.append(table(D['Running processes'], { cols: ['Risk', 'Name', 'PID', 'Signer', 'Signature', 'Path', 'Parent', 'CommandLine', 'Started', 'SHA256'] }))],
+  ['autostarts', 'Autostarts', () => arr(pick('Autostarts & persistence').Entries).length, v => {
+    v.append(...section('Autostart entries (non-Microsoft)', table(pick('Autostarts & persistence').Entries, { cols: ['Risk', 'Location', 'Name', 'Target', 'Signer', 'Signature', 'Command', 'Extra', 'SHA256'] })));
+    v.append(...section('WMI subscriptions', table(pick('Autostarts & persistence').WmiSubscriptions)));
+  }],
+  ['network', 'Network', () => arr(pick('Network').Established).length, v => {
+    const n = pick('Network');
+    v.append(...section('Active internet connections', table(n.Established, { cols: ['Risk', 'Process', 'PID', 'Remote', 'Local', 'Signer', 'Path'] })));
+    v.append(...section('Listening on all interfaces', table(n.Listening, { cols: ['Risk', 'Port', 'Process', 'PID', 'Signer', 'Path'] })));
+    v.append(...section('DNS servers', table(n.DnsServers)));
+    v.append(...section('Hosts file entries', table(arr(n.HostsEntries).map(h => ({ Entry: h })))));
+    v.append(...section('Proxies', table(n.Proxies)));
+  }],
+  ['defender', 'Antivirus', () => arr(pick('Antivirus & Defender').RecentDetections).length, v => {
+    const d = pick('Antivirus & Defender');
+    v.append(...section('Defender status', kv(d.Status)));
+    v.append(...section('Installed antivirus products', table(d.AntivirusProducts)));
+    v.append(...section('Exclusions', table(d.Exclusions)));
+    v.append(...section('Detections (last 90 days)', table(d.RecentDetections)));
+  }],
+  ['events', 'Event logs', () => arr(pick('Event logs').NewServices).length, v => {
+    const e = pick('Event logs');
+    v.append(...section('Services installed', table(e.NewServices)));
+    v.append(...section('Defender exclusion changes', table(e.DefenderExclusionChanges)));
+    v.append(...section('Defender protection switched off', table(e.DefenderRtpDisabled)));
+    v.append(...section('Logs cleared', table(e.LogsCleared)));
+    v.append(...section('Suspicious PowerShell', table(e.SuspiciousPowerShell)));
+    v.append(el('p', { text: `Failed logons in the last 7 days: ${e.FailedLogons7d ?? 'n/a'}` }));
+  }],
+  ['files', 'Recent files', () => arr(D['Recently created files']).length, v => v.append(table(D['Recently created files'], { cols: ['Risk', 'Created', 'Path', 'Signer', 'Signature', 'Size', 'SHA256'] }))],
+  ['browser', 'Browser extensions', () => arr(D['Browser extensions']).length, v => v.append(table(D['Browser extensions'], { cols: ['Risk', 'Browser', 'Name', 'FromStore', 'BroadPermissions', 'Version', 'User', 'Profile', 'Installed', 'Id'] }))],
+  ['software', 'Software', () => arr(pick('Installed software').Installed).length, v => {
+    v.append(...section('Remote-access tools', table(pick('Installed software').RemoteAccessTools)));
+    v.append(...section('All installed programs', table(pick('Installed software').Installed)));
+  }],
+  ['reputation', 'Reputation', () => arr(pick('Reputation').Results).length, v => {
+    const r = pick('Reputation');
+    v.append(...section('Sources used', table(arr(r.Providers).map(p => ({ Source: p.Name, Available: p.Available ? 'Yes' : 'No (not configured)' })))));
+    v.append(...section('Files checked', table(r.Results, { cols: ['Risk', 'Verdict', 'Label', 'Path', 'Sources', 'Signed', 'Signer', 'Links', 'SHA256'] })));
+  }],
+  ['yara', 'YARA', () => arr(pick('YARA scan').Matches).length, v => {
+    const y = pick('YARA scan');
+    v.append(el('p', { text: y.Ran === false ? (y.Reason || 'YARA scan did not run.') : `${y.Rules} rules applied to ${y.Scanned} files (${y.Skipped} skipped).` }));
+    v.append(...section('Matches', table(y.Matches, { cols: ['Risk', 'Description', 'Path', 'Rule', 'Matched', 'Tags'] })));
+    if (arr(y.RuleErrors).length) v.append(...section('Rule problems', table(arr(y.RuleErrors).map(e => ({ Problem: e })))));
+  }],
+  ['system', 'System', () => null, v => {
+    const s = pick('System posture');
+    v.append(...section('Device', kv(s)));
+    v.append(...section('Firewall', table(s.Firewall)));
+    v.append(...section('Local administrators', table(s.LocalAdmins)));
+    v.append(...section('BitLocker', table(s.BitLocker)));
+    v.append(...section('Scanners', kv({ 'Defender quick scan': fmt(D['Defender quick scan']), 'Autoruns': fmt(D['Sysinternals Autoruns']), 'Rule pack': (DATA.Meta || {}).RulePackVersion })));
+    v.append(...section('Check timings (ms)', kv(DATA.Timings)));
+  }],
+];
+
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.id === id));
+  document.querySelectorAll('.view').forEach(v => v.style.display = v.id === 'view-' + id ? '' : 'none');
+  const tool = document.getElementById('ftool'); if (tool) tool.style.display = id === 'findings' ? '' : 'none';
+  const v = document.getElementById('view-' + id);
+  if (!v.dataset.done) { v.dataset.done = 1; TABS.find(t => t[0] === id)[3](v); }
+}
+
+function tabs() {
+  const nav = document.getElementById('tabs'), views = document.getElementById('views');
+  for (const [id, label, count] of TABS.filter(t => DATA.Data || t[0] === 'findings')) {
+    const n = count();
+    nav.append(el('button', { class: 'tab', 'data-id': id, onclick: () => showTab(id) }, label, n != null ? el('small', { text: ` ${n}` }) : null));
+    views.append(el('div', { class: 'view', id: 'view-' + id }));
+  }
+  showTab('findings');
+}
+
+header(); gauge(); overview(); tabs();
+document.getElementById('footer').textContent = 'Read-only triage scan. A clean result lowers risk but cannot prove a device is free of malware. Files listed in manifest.sha256 can be used to verify this report was not altered.';
+</script>
+</body>
+</html>

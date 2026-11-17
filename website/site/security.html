@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TriageKit Security</title>
+<meta name="description" content="How to report a vulnerability in TriageKit, and how releases are protected.">
+<meta name="referrer" content="no-referrer">
+<link rel="preload" href="/assets/geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7z' fill='%233d8bff'/%3E%3Cpath d='m10.5 16 4 4 7-8' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="TriageKit home">
+      <svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7z" fill="#3d8bff"/><path d="m10.5 16 4 4 7-8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      TriageKit
+    </a>
+    <nav class="links" aria-label="Main">
+      <a href="/#why">Why TriageKit</a>
+      <a class="keep" href="/features">Features</a>
+      <a href="/#privacy">Privacy</a>
+      <a href="/#open">Open source</a>
+      <a class="btn btn-sm" href="/#get">Get TriageKit</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap doc">
+<div class="label">Security</div>
+<h1 class="s6">Found a problem? Tell us first.</h1>
+<p class="label updated">Updated 17 November 2026</p>
+<div class="note">Report vulnerabilities privately through GitHub's private vulnerability reporting on the TriageKit repository (Security → Report a vulnerability). Please don't open a public issue. The reporting link goes live here and in <code>/.well-known/security.txt</code> when the repository is published.</div>
+<h2>Scope</h2>
+<ul><li>The TriageKit app (portable and installed editions, including the background service).</li><li>The update service.</li><li>Release integrity: anything that would let someone ship a fake update or a forged rule pack.</li></ul>
+<h2>How we handle reports</h2>
+<ul><li>We confirm receipt within 3 working days.</li><li>We aim to fix confirmed issues within 90 days and will agree a disclosure date with you.</li><li>We credit you in the changelog if you want.</li></ul>
+<h2>Safe harbour</h2>
+<p>Research done in good faith, on your own systems or test accounts, without accessing other people's data or disrupting the services, won't be pursued. Please don't run denial-of-service tests against the update service.</p>
+<h2>How releases are protected</h2>
+<ul>
+<li><b>Signed updates.</b> Each release announcement is signed with a release key that never leaves Cloudflare's storage; it isn't in the code or on any PC. Publishing needs a fresh passkey touch, and adding or removing a passkey needs a touch of an existing one, so a stolen login session can't publish. The app checks that signature, only moves to newer versions, and checks the download's SHA-256 before replacing anything. Honest limit: someone able to deploy new code to our Cloudflare account could use the key, so that account is what we guard most, and moving release signing to an offline key is on our roadmap.</li>
+<li><b>Signed updates and rule packs.</b> Update announcements and rule packs carry signatures the app checks with keys compiled into it. Unsigned rules are ignored.</li>
+<li><b>Read-only.</b> The scanner never deletes, quarantines or changes files, so it can't be abused to damage a system.</li>
+<li><b>Code signing in progress.</b> Releases are built by GitHub Actions from tagged source; Authenticode signing through SignPath Foundation is being set up. Until then, compare the SHA-256 with the one published for the release.</li>
+</ul>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>TriageKit · free &amp; open source · a clean result lowers risk but can't prove a PC is free of malware.</span>
+    <nav aria-label="Legal"><a href="/features">Features</a><a href="/privacy">Privacy</a><a href="/security">Security</a></nav>
+  </div>
+</footer>
+</body>
+</html>

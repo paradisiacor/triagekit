@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Features · TriageKit</title>
+<meta name="description" content="Everything TriageKit checks on a Windows PC: antivirus and protection, startup and persistence, files and malware, accounts and sessions, browsers, network, Windows settings, logs, plus PC Doctor and gaming checks.">
+<meta name="referrer" content="no-referrer">
+<link rel="preload" href="/assets/geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css">
+<script src="/assets/globe.js" defer></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7z' fill='%233d8bff'/%3E%3Cpath d='m10.5 16 4 4 7-8' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="TriageKit home">
+      <svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7z" fill="#3d8bff"/><path d="m10.5 16 4 4 7-8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      TriageKit
+    </a>
+    <nav class="links" aria-label="Main">
+      <a href="/#why">Why TriageKit</a>
+      <a class="keep" href="/features" aria-current="page">Features</a>
+      <a href="/#privacy">Privacy</a>
+      <a href="/#open">Open source</a>
+      <a class="btn btn-sm" href="/#get">Get TriageKit</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="fhero">
+    <div class="stage" aria-hidden="true">
+      <canvas data-globe data-cap="210"></canvas>
+      <div class="glass"><svg viewBox="0 0 120 140"><defs>
+        <linearGradient id="gS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fd3ff" stop-opacity=".55"/><stop offset="1" stop-color="#0b1626" stop-opacity=".9"/></linearGradient>
+        <linearGradient id="gR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bfe9ff"/><stop offset=".5" stop-color="#3d8bff"/><stop offset="1" stop-color="#1b3f7a"/></linearGradient>
+        <pattern id="hx" width="10" height="17.32" patternUnits="userSpaceOnUse" patternTransform="scale(.7)"><path d="M5 0l5 2.89v5.77L5 11.55 0 8.66V2.89zM5 11.55v5.77" fill="none" stroke="#6fd3ff" stroke-opacity=".22" stroke-width=".6"/></pattern>
+      </defs>
+        <path d="M60 6 14 24v34c0 32 20 57 46 70 26-13 46-38 46-70V24z" fill="url(#gS)" stroke="url(#gR)" stroke-width="2.5"/>
+        <path d="M60 6 14 24v34c0 32 20 57 46 70 26-13 46-38 46-70V24z" fill="url(#hx)"/>
+        <path d="m40 70 14 14 27-30" fill="none" stroke="#e9f6ff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg></div>
+    </div>
+    <div class="wrap fhero-text">
+      <div class="label">Features · free for everyone</div>
+      <h1>Everything it looks at.<br><b>Nothing it touches.</b></h1>
+      <p class="lede">Twelve categories, from the places malware hides to why your games stutter. Each finding names the exact file, key or setting, explains why it matters, and tells you how to fix it yourself. TriageKit reads; it never changes, deletes or uploads.</p>
+    </div>
+  </section>
+
+  <nav class="catnav wrap" aria-label="Feature categories">
+    <div class="filter" data-filter hidden role="toolbar" aria-label="Show category">
+      <button type="button" data-key="all" aria-pressed="true">All</button>
+      <button type="button" data-key="protection">Protection</button>
+      <button type="button" data-key="startup">Startup</button>
+      <button type="button" data-key="files">Files &amp; malware</button>
+      <button type="button" data-key="accounts">Accounts</button>
+      <button type="button" data-key="browsers">Browsers</button>
+      <button type="button" data-key="network">Network</button>
+      <button type="button" data-key="system">Windows</button>
+      <button type="button" data-key="programs">Programs</button>
+      <button type="button" data-key="logs">Logs</button>
+      <button type="button" data-key="doctor">PC Doctor</button>
+      <button type="button" data-key="gaming">Gaming</button>
+      <button type="button" data-key="reports">Reports</button>
+    </div>
+  </nav>
+
+  <div class="wrap fcats">
+
+    <section class="fcat" id="protection">
+      <header><span class="dot g"></span><div><div class="label">01</div><h2>Antivirus &amp; protection</h2></div><p>Is your antivirus really on, current and unrestricted? Malware switches protection off quietly and adds itself to the exclusions.</p></header>
+      <div class="fgrid">
+        <article><h3>Defender health</h3><p>Real-time, behaviour and tamper protection, cloud and PUA blocking, definition age, and which antivirus Windows thinks is active.</p><div class="ex h"><i>HIGH</i>Defender real-time protection is OFF</div></article>
+        <article><h3>Exclusions you didn't add</h3><p>Every excluded folder, file type and process, flagged when it points at Downloads, Temp, a whole drive or an unsigned program.</p><div class="ex h"><i>HIGH</i>Defender exclusion: C:\Users\…\AppData\Roaming</div></article>
+        <article><h3>Defender quick scan</h3><p>Optional: asks Windows' own scanner for a quick scan and reports what it found, next to TriageKit's findings.</p><div class="ex h"><i>HIGH</i>Microsoft Defender found threats</div></article>
+        <article><h3>Protection history</h3><p>How often protection was switched off recently, from the Defender log, even if it is back on now.</p><div class="ex m"><i>MED</i>Defender real-time protection was switched off 3 times; it is on again now</div></article>
+      </div>
+    </section>
+
+    <section class="fcat" id="startup">
+      <header><span class="dot b"></span><div><div class="label">02</div><h2>Startup &amp; persistence</h2></div><p>Malware wants to survive a reboot. TriageKit checks the obvious places and the hooks only specialists know.</p></header>
+      <div class="fgrid">
+        <article><h3>Autostarts</h3><p>Run keys, Startup folders, services, scheduled tasks and their real command lines, each with its signature.</p><div class="ex h"><i>HIGH</i>Unsigned program starts with Windows: updater.exe</div></article>
+        <article><h3>Hidden hooks</h3><p>WMI subscriptions, Winlogon shell and Userinit, AppInit and AppCert DLLs, print monitors, COM hijacks, Image File Execution Options.</p><div class="ex c"><i>CRIT</i>Windows logon shell has been modified</div></article>
+        <article><h3>Replaced accessibility tools</h3><p>The classic "sticky keys" backdoor: sethc, utilman, osk and friends swapped for a command prompt.</p><div class="ex c"><i>CRIT</i>Accessibility tool replaced: sethc.exe</div></article>
+        <article><h3>Sysinternals Autoruns</h3><p>Optional: if you keep Microsoft's Autoruns next to TriageKit, its full list is added and checked too.</p></article>
+      </div>
+    </section>
+
+    <section class="fcat" id="files">
+      <header><span class="dot o"></span><div><div class="label">03</div><h2>Files &amp; malware</h2></div><p>Signed detection rules, file reputation and a look inside archives and documents, without ever uploading a file.</p></header>
+      <div class="fgrid">
+        <article><h3>Malware rules</h3><p>A built-in, signed rule set for stealers, clippers, loaders, AMSI bypasses and droppers, checked against programs and scripts.</p><div class="ex h"><i>HIGH</i>Collects saved browser passwords, cookies and crypto wallets: sync.py</div></article>
+        <article><h3>Reputation lookups</h3><p>SHA-256 fingerprints of suspicious files checked with CIRCL and Defender; VirusTotal and MalwareBazaar with your own key. Only after you agree.</p><div class="ex c"><i>CRIT</i>setup_patch.exe is known malware</div></article>
+        <article><h3>Archives &amp; documents</h3><p>ZIPs and Office files opened in memory: macros that run on open, scripts and shortcuts hidden inside downloads.</p><div class="ex h"><i>HIGH</i>Office document runs automatically when opened: invoice.docm</div></article>
+        <article><h3>Shortcuts, scripts &amp; Run box</h3><p>Shortcuts that launch hidden PowerShell, commands pasted from fake "verify you're human" pages, freshly dropped scripts.</p><div class="ex h"><i>HIGH</i>Shortcut runs a hidden command: Resume.pdf.lnk</div></article>
+        <article><h3>Deep scan</h3><p>Walks the whole system drive (skipping Windows' own component stores) with the real file count shown as it goes; programs and scripts get a closer look.</p><div class="ex m"><i>MED</i>3 unsigned programs recently created in risky folders</div></article>
+      </div>
+    </section>
+
+    <section class="fcat" id="accounts">
+      <header><span class="dot r"></span><div><div class="label">04 · new in 0.13</div><h2>Accounts &amp; sessions</h2></div><p>Today's stealers don't want your password, they want your logged-in session. TriageKit looks for the signs, never for the cookies themselves.</p></header>
+      <div class="fgrid">
+        <article><h3>Browser under remote control</h3><p>Shortcuts and running browsers started with debugging or extension-loading switches, launch hijacks and policies that turn browser encryption off.</p><div class="ex h"><i>HIGH</i>Browser is running under remote control (chrome.exe)</div></article>
+        <article><h3>Stealer leftovers</h3><p>Folders and archives that look like stolen browser data waiting to be sent, and copies of browser, Steam or Telegram session files in Temp.</p><div class="ex h"><i>HIGH</i>Folder that looks like stolen browser data waiting to be sent</div></article>
+        <article><h3>Fake installers &amp; cheats</h3><p>SteamSetup, DiscordSetup, OBS and 18 more checked against their real maker's signature; executors and "free Robux" tools in Downloads.</p><div class="ex h"><i>HIGH</i>Fake Discord installer in Downloads: DiscordSetup.exe</div></article>
+        <article><h3>Account sites redirected</h3><p>hosts-file entries that send Steam, Discord, Epic, Riot or Roblox to another server, grouped by where they point.</p><div class="ex h"><i>HIGH</i>Account sites are redirected to another server</div></article>
+        <article><h3>Tampered apps</h3><p>Modified desktop wallets and messengers, foreign files in browser and launcher folders, outdated browsers that miss app-bound encryption.</p><div class="ex h"><i>HIGH</i>Foreign program inside the browser's folder: version.dll</div></article>
+        <article><h3>"Sign out everywhere" steps</h3><p>Changing a password doesn't end a stolen session. Every account finding comes with the steps that do, per platform.</p></article>
+      </div>
+    </section>
+
+    <section class="fcat" id="browsers">
+      <header><span class="dot c"></span><div><div class="label">05</div><h2>Browsers &amp; privacy</h2></div><p>Extensions with too much power, settings locked by someone else, and which programs used your camera and microphone.</p></header>
+      <div class="fgrid">
+        <article><h3>Extensions</h3><p>Chrome, Edge, Brave, Opera, Vivaldi and Firefox: sideloaded or force-installed extensions, permissions on account sites, wallet extensions.</p><div class="ex h"><i>HIGH</i>Extension not from the official store, with access to your browsing</div></article>
+        <article><h3>Hijacked settings</h3><p>Search engine and homepage locked by policy, proxies and changed launch commands.</p><div class="ex m"><i>MED</i>Chrome search engine is locked by policy</div></article>
+        <article><h3>Camera, microphone &amp; location</h3><p>Which programs used them and when, from Windows' own privacy history; unsigned ones stand out.</p><div class="ex h"><i>HIGH</i>Unsigned program used your microphone: rec.exe</div></article>
+      </div>
+    </section>
+
+    <section class="fcat" id="network">
+      <header><span class="dot p"></span><div><div class="label">06</div><h2>Network &amp; certificates</h2></div><p>Who your PC talks to, who can reach it, and whether someone can read your encrypted traffic.</p></header>
+      <div class="fgrid">
+        <article><h3>Connections &amp; open ports</h3><p>Programs talking to the internet or accepting connections, with their signature and folder.</p><div class="ex h"><i>HIGH</i>Unsigned or risky program talking to the internet: svch0st.exe</div></article>
+        <article><h3>Root certificates</h3><p>Every trusted root not on Microsoft's list; known app certificates are told apart from unknown ones.</p><div class="ex m"><i>MED</i>Unknown trusted root certificate: nkjtfcvQ42U</div></article>
+        <article><h3>DNS, proxy &amp; hosts</h3><p>DNS servers listed for review, system-wide proxies, and hosts-file redirects of well-known sites.</p><div class="ex m"><i>MED</i>A web proxy is configured</div></article>
+      </div>
+    </section>
+
+    <section class="fcat" id="system">
+      <header><span class="dot g"></span><div><div class="label">07</div><h2>Windows settings &amp; hardening</h2></div><p>The switches that decide how much damage one bad click can do.</p></header>
+      <div class="fgrid">
+        <article><h3>Posture</h3><p>UAC, SmartScreen, firewall profiles, Secure Boot, drive encryption, update age, Remote Desktop.</p><div class="ex h"><i>HIGH</i>User Account Control (UAC) is disabled</div></article>
+        <article><h3>Hardening</h3><p>Memory integrity, LSA protection, SMBv1, PowerShell 2.0, RDP without network-level authentication, TPM.</p><div class="ex m"><i>MED</i>The outdated SMBv1 file-sharing protocol is enabled</div></article>
+        <article><h3>Accounts</h3><p>Hidden users, enabled Guest and built-in Administrator, how many accounts have admin rights.</p><div class="ex h"><i>HIGH</i>Hidden user account: support$</div></article>
+      </div>
+    </section>
+
+    <section class="fcat" id="programs">
+      <header><span class="dot b"></span><div><div class="label">08</div><h2>Programs, drivers &amp; processes</h2></div><p>What is running right now, what loaded into it, and which drivers have the keys to the kernel.</p></header>
+      <div class="fgrid">
+        <article><h3>Running processes</h3><p>Fake system processes, tampered signed programs, miners, hidden script commands and unsigned programs in risky folders.</p><div class="ex c"><i>CRIT</i>Fake system process: svchost.exe running from AppData</div></article>
+        <article><h3>Loaded modules</h3><p>Unsigned code injected into signed processes.</p></article>
+        <article><h3>Drivers</h3><p>Unsigned kernel drivers, known-vulnerable drivers attackers abuse, weakened signature enforcement.</p><div class="ex m"><i>MED</i>Known-vulnerable driver loaded: gdrv.sys</div></article>
+        <article><h3>Installed software</h3><p>Remote-access tools installed or running, and hacking tools worth knowing about on a shared PC.</p><div class="ex m"><i>MED</i>Remote-access tool running: AnyDesk</div></article>
+      </div>
+    </section>
+
+    <section class="fcat" id="logs">
+      <header><span class="dot o"></span><div><div class="label">09</div><h2>Activity logs</h2></div><p>Windows writes down a lot. TriageKit reads the parts that tell a story.</p></header>
+      <div class="fgrid">
+        <article><h3>Wiped and tampered logs</h3><p>Cleared event logs, protection switched off, services installed from risky locations.</p><div class="ex h"><i>HIGH</i>An event log was cleared (Security)</div></article>
+        <article><h3>Scripts and sign-ins</h3><p>Suspicious PowerShell that ran, failed sign-in bursts in the last 7 days.</p><div class="ex m"><i>MED</i>48 failed sign-in attempts in the last 7 days</div></article>
+      </div>
+    </section>
+
+    <section class="fcat" id="doctor">
+      <header><span class="dot c"></span><div><div class="label">10 · Health</div><h2>PC Doctor</h2></div><p>For "it keeps crashing" and "it got slow": hardware, drivers and stability, with your own CPU and GPU's real limits.</p></header>
+      <div class="fgrid">
+        <article><h3>Crashes decoded</h3><p>Blue screens with the driver behind them, GPU driver resets, app crashes and freezes over 30 days.</p><div class="ex h"><i>HIGH</i>Windows Memory Diagnostic found RAM errors</div></article>
+        <article><h3>Live performance (20 s)</h3><p>CPU, disk, memory and driver latency measured live; the busiest apps, without TriageKit itself.</p><div class="ex m"><i>MED</i>The Windows disk (C:) responds slowly</div></article>
+        <article><h3>Sensors</h3><p>Temperatures and voltages through HWiNFO or LibreHardwareMonitor, judged against your CPU's own limits.</p><div class="ex l"><i>LOW</i>The CPU slowed itself down because of heat</div></article>
+        <article><h3>RAM, monitors &amp; graphics</h3><p>RAM below rated speed or in one channel, PCIe lanes, monitors running below their refresh rate.</p><div class="ex l"><i>LOW</i>RAM runs at 4800 MT/s but is rated for 6000 MT/s</div></article>
+        <article><h3>Disks &amp; devices</h3><p>Failing disks, unreadable sectors, heat, devices with driver problems, failed Windows Updates.</p><div class="ex h"><i>HIGH</i>Disk reports it is failing: Samsung SSD 860</div></article>
+      </div>
+    </section>
+
+    <section class="fcat" id="gaming">
+      <header><span class="dot p"></span><div><div class="label">11 · Performance</div><h2>Gaming</h2></div><p>Stutter, throttling and the settings that quietly cost frames, plus protection for the accounts you play on.</p></header>
+      <div class="fgrid">
+        <article><h3>Performance setup</h3><p>Power plan, Game Mode, graphics driver, GPU throttling and the overlays that often cause stutter.</p><div class="ex m"><i>MED</i>Graphics card is slowing down to protect itself</div></article>
+        <article><h3>Gamer account protection</h3><p>Discord tampered with by token grabbers, and client mods that change its startup file. Session theft is covered for everyone in Accounts &amp; sessions.</p><div class="ex c"><i>CRIT</i>Discord has been tampered with (token grabber)</div></article>
+      </div>
+    </section>
+
+    <section class="fcat" id="reports">
+      <header><span class="dot b"></span><div><div class="label">12 · Proof</div><h2>Reports, privacy &amp; editions</h2></div><p>Built for proof, not just a score.</p></header>
+      <div class="fgrid">
+        <article><h3>Honest score</h3><p>Repeats count once, a failed check never looks clean, and areas you didn't check stay grey.</p></article>
+        <article><h3>Shareable report</h3><p>Every finding and fix, without your user name, PC name, IPs, account IDs or passwords typed into commands.</p></article>
+        <article><h3>Evidence folder</h3><p>SHA-256 of every report file; TriageKit refuses to open a report that was changed after the scan.</p></article>
+        <article><h3>What changed</h3><p>New, still there, fixed: each check is compared with the previous one. Accept your own choices once.</p></article>
+        <article><h3>Portable or installed</h3><p>Runs from a USB stick with nothing installed, or as a small service with daily checks and alerts.</p></article>
+      </div>
+    </section>
+  </div>
+
+  <section class="s5">
+    <div class="wrap">
+      <div class="dl">
+        <div><div class="label">Free &amp; open source</div><h2 class="s3">Every feature, for everyone.</h2><p>No plans, no account, no tracking. The code is open under GPL-3.0.</p></div>
+        <div class="cta-end"><a class="btn btn-primary" href="/#get">Get TriageKit</a><a class="btn" href="/#privacy">What it sends, and what it doesn't</a></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>TriageKit · free &amp; open source · a clean result lowers risk but can't prove a PC is free of malware.</span>
+    <nav aria-label="Legal"><a href="/features">Features</a><a href="/privacy">Privacy</a><a href="/security">Security</a></nav>
+  </div>
+</footer>
+</body>
+</html>
