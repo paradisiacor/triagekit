@@ -124,9 +124,20 @@ public static class RedFlags
 
     private static bool Has(byte[] d, ReadOnlySpan<byte> needle) => d.AsSpan().IndexOf(needle) >= 0;
 
-    private static string Snippet(string text, int index, int length)
+    internal static string Snippet(string text, int index, int length)
     {
-        int from = Math.Max(0, index - 30), to = Math.Min(text.Length, index + length + 40);
-        return Regex.Replace(text[from..to], @"\s+", " ").Trim();
+        // Quote whole words, from the start of the sentence (or line) to its end when that's close; mark cuts with "…".
+        char[] stops = { '.', '!', '?', '\n' };
+        int matchEnd = index + length;
+        int from = Math.Max(0, index - 60), to = Math.Min(text.Length, matchEnd + 60);
+        bool cutStart = false, cutEnd = false;
+        int sentence = index > from ? text.LastIndexOfAny(stops, index - 1, index - from) : -1;
+        if (sentence >= 0) from = sentence + 1;
+        else if (from > 0) { cutStart = true; while (from < index && !char.IsWhiteSpace(text[from - 1])) from++; }
+        int end = to > matchEnd ? text.IndexOfAny(stops, matchEnd, to - matchEnd) : -1;
+        if (end >= 0) to = end + 1;
+        else if (to < text.Length) { cutEnd = true; while (to > matchEnd && !char.IsWhiteSpace(text[to])) to--; }
+        var quote = Regex.Replace(text[from..to], @"\s+", " ").Trim();
+        return (cutStart ? "…" : "") + quote + (cutEnd ? "…" : "");
     }
 }

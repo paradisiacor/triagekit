@@ -349,7 +349,7 @@ internal sealed class Bridge
                 }
                 long id; ScanDiff diff;
                 using (var h = _store.Open()) (id, diff) = h.Record(outcome.Result, outcome.ReportHtml);
-                _win.Post(new { @event = "scan.finished", data = new { id, score = outcome.Result.Score, verdict = outcome.Result.Verdict, counts = outcome.Result.Counts, newCount = diff.New.Count, resolvedCount = diff.Resolved.Count } });
+                _win.Post(new { @event = "scan.finished", data = new { id, score = outcome.Result.Score, verdict = outcome.Result.Verdict, counts = outcome.Result.Counts, newCount = diff.HasPrevious ? diff.New.Count : 0, resolvedCount = diff.Resolved.Count } });
             }
             catch (Exception ex) { _win.Post(new { @event = "scan.failed", data = new { message = "The check failed: " + ex.Message } }); }
             finally { _scanning = false; }

@@ -45,6 +45,8 @@ public sealed class ScanDiff
     public List<FindingRecord> New { get; } = new();
     public List<FindingRecord> Resolved { get; } = new();
     public List<FindingRecord> Persisting { get; } = new();
+    /// <summary>False for the very first check: there was nothing to compare with, so "new" means "found".</summary>
+    public bool HasPrevious { get; init; }
     /// <summary>New findings that deserve a user alert (Medium or worse).</summary>
     public IEnumerable<FindingRecord> Alertable => New.Where(f => f.Severity <= Severity.Medium);
 }
@@ -53,7 +55,7 @@ public static class FindingDiff
 {
     public static ScanDiff Compare(IEnumerable<FindingRecord>? previous, IEnumerable<FindingRecord> current)
     {
-        var diff = new ScanDiff();
+        var diff = new ScanDiff { HasPrevious = previous is not null };
         var prev = (previous ?? Enumerable.Empty<FindingRecord>()).Where(f => f.Severity != Severity.Info).GroupBy(f => f.Fingerprint).ToDictionary(g => g.Key, g => g.First());
         var cur = current.Where(f => f.Severity != Severity.Info).GroupBy(f => f.Fingerprint).ToDictionary(g => g.Key, g => g.First());
         foreach (var (fp, f) in cur) (prev.ContainsKey(fp) ? diff.Persisting : diff.New).Add(f);
@@ -116,7 +118,7 @@ public sealed class HistoryStore : IDisposable
         var current = FindingDiff.ToRecords(result.Findings);
         var previous = LatestFindings(fullOnly: !result.Meta.Quick);
         var diff = FindingDiff.Compare(previous, current);
-        var newSet = diff.New.Select(f => f.Fingerprint).ToHashSet();
+        var newSet = diff.HasPrevious ? diff.New.Select(f => f.Fingerprint).ToHashSet() : new HashSet<string>();
 
         using var tx = _db.BeginTransaction();
         long id;
@@ -130,7 +132,7 @@ public sealed class HistoryStore : IDisposable
             c.Parameters.AddWithValue("$c", JsonSerializer.Serialize(result.Counts));
             c.Parameters.AddWithValue("$r", (object?)reportPath ?? DBNull.Value);
             c.Parameters.AddWithValue("$q", result.Meta.Quick ? 1 : 0);
-            c.Parameters.AddWithValue("$n", diff.New.Count);
+            c.Parameters.AddWithValue("$n", diff.HasPrevious ? diff.New.Count : 0);
             c.Parameters.AddWithValue("$rs", diff.Resolved.Count);
             id = (long)c.ExecuteScalar()!;
         }

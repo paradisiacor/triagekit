@@ -46,16 +46,32 @@ internal sealed class AppWindow : Form
 
     private async Task InitAsync()
     {
+        try { await StartBrowserAsync(); }
+        catch (Exception ex)
+        {
+            // Never leave an empty black window: say what went wrong and how to get going again.
+            if (IsDisposed) return;
+            MessageBox.Show(this, "TriageKit couldn't start its window.\n\n" + ex.Message +
+                "\n\nMake sure the Microsoft Edge WebView2 Runtime is installed and up to date (go.microsoft.com/fwlink/p/?LinkId=2124703), then start TriageKit again. " +
+                "Scans also work from the command line: TriageKit.exe scan", "TriageKit", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            Close();
+        }
+    }
+
+    private async Task StartBrowserAsync()
+    {
         bool elevated = TriageKit.Core.Platform.Sys.IsElevated();
         string dataDir;
         if (elevated)
         {
             // Running as admin: a user-level program must not be able to steer this window. Ignore WebView2 environment
-            // overrides and keep the browser profile in an admin-only folder instead of the user's AppData.
+            // overrides and keep the browser profile in ProgramData, writable only by SYSTEM, Administrators and the
+            // person at the desktop. WebView2 never runs elevated: its browser processes always run as the desktop user
+            // without admin rights, so that account has to be able to write the profile (without it the window stays black).
             foreach (System.Collections.DictionaryEntry kv in Environment.GetEnvironmentVariables())
                 if (kv.Key is string k && k.StartsWith("WEBVIEW2_", StringComparison.OrdinalIgnoreCase)) Environment.SetEnvironmentVariable(k, null);
             dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "TriageKit", "WebView2-" + Environment.UserName);
-            try { Agent.SecureFolder.EnsurePrivate(dataDir); }
+            try { Agent.SecureFolder.EnsureBrowserProfile(dataDir, DesktopUser()); }
             catch (Exception ex)
             {
                 // Fail closed: the user-writable profile is exactly what an elevated window must not use.
@@ -93,8 +109,56 @@ internal sealed class AppWindow : Form
             _bridge.Receive(e.WebMessageAsJson);
         };
         core.PermissionRequested += (_, e) => e.State = e.PermissionKind == CoreWebView2PermissionKind.ClipboardRead ? CoreWebView2PermissionState.Deny : CoreWebView2PermissionState.Deny;
+        core.ProcessFailed += (_, e) =>
+        {
+            // The page crashed or the browser process went away: reload once, and if the browser itself is gone say so
+            // instead of showing a frozen or black window.
+            if (e.ProcessFailedKind == CoreWebView2ProcessFailedKind.RenderProcessExited || e.ProcessFailedKind == CoreWebView2ProcessFailedKind.RenderProcessUnresponsive)
+            {
+                if (_reloads++ < 2) try { core.Reload(); } catch { }
+                return;
+            }
+            if (e.ProcessFailedKind == CoreWebView2ProcessFailedKind.BrowserProcessExited && !IsDisposed)
+            {
+                BeginInvoke(() =>
+                {
+                    MessageBox.Show(this, "TriageKit's window stopped working (the Microsoft Edge WebView2 Runtime closed unexpectedly). Start TriageKit again.",
+                        "TriageKit", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    Close();
+                });
+            }
+        };
         core.Navigate(Origin + "/index.html" + (_startPage is null ? "" : "#" + _startPage));
     }
+
+    private int _reloads;
+
+    /// <summary>
+    /// The account signed in to this desktop session. Usually the same account TriageKit runs as; different when a
+    /// standard user started it with another account's admin password. WebView2 starts its browser as this account.
+    /// </summary>
+    private static System.Security.Principal.SecurityIdentifier DesktopUser()
+    {
+        var self = System.Security.Principal.WindowsIdentity.GetCurrent().User!;
+        try
+        {
+            string? Query(int info)
+            {
+                if (!WTSQuerySessionInformation(IntPtr.Zero, -1, info, out var buf, out _)) return null;
+                try { return Marshal.PtrToStringUni(buf); } finally { WTSFreeMemory(buf); }
+            }
+            var user = Query(5 /* WTSUserName */);
+            var domain = Query(7 /* WTSDomainName */);
+            if (string.IsNullOrEmpty(user)) return self;
+            var account = new System.Security.Principal.NTAccount(string.IsNullOrEmpty(domain) ? user : domain + "\\" + user);
+            return (System.Security.Principal.SecurityIdentifier)account.Translate(typeof(System.Security.Principal.SecurityIdentifier));
+        }
+        catch { return self; }
+    }
+
+    [DllImport("wtsapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool WTSQuerySessionInformation(IntPtr server, int sessionId, int infoClass, out IntPtr buffer, out int bytes);
+    [DllImport("wtsapi32.dll")] private static extern void WTSFreeMemory(IntPtr memory);
 
     private void Serve(CoreWebView2 core, CoreWebView2WebResourceRequestedEventArgs e)
     {

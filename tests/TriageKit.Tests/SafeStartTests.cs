@@ -81,6 +81,20 @@ public class SafeStartDownloadTests : IDisposable
         Assert.Equal(3, r.Files);   // the archive and the two files in it
     }
 
+    [Fact]
+    public void AntivirusQuoteIsWholeSentence()
+    {
+        var text = "IMPORTANT!!\r\nBefore installing please disable Windows Defender real-time protection and add the game folder to exclusions. The crack is a false positive.";
+        var i = text.IndexOf("disable", StringComparison.Ordinal);
+        var q = RedFlags.Snippet(text, i, "disable Windows Defender".Length);
+        Assert.Equal("Before installing please disable Windows Defender real-time protection and add the game folder to exclusions.", q);
+        var longText = new string('x', 10) + " " + string.Join(" ", Enumerable.Repeat("word", 40)) + " turn off your antivirus " + string.Join(" ", Enumerable.Repeat("more", 40));
+        var q2 = RedFlags.Snippet(longText, longText.IndexOf("turn off", StringComparison.Ordinal), "turn off your antivirus".Length);
+        Assert.StartsWith("…word", q2);
+        Assert.EndsWith("more…", q2);
+        Assert.Contains("turn off your antivirus", q2);
+    }
+
     [Theory]
     [InlineData("Add the game folder to the exclusions of your antivirus", true)]
     [InlineData("Turn off your antivirus before extracting", true)]

@@ -19,6 +19,33 @@ public sealed class RecentFilesCheck : ICheck
     private static readonly Regex Script = new(@"\.(vbs|vbe|js|jse|hta|ps1)$", RegexOptions.IgnoreCase);
     private static readonly Regex Skip = new(@"\\(node_modules|\.git|Packages|WindowsApps|Microsoft\\Edge|Google\\Chrome|BraveSoftware|Mozilla|Code Cache|GPUCache|Cache_Data|CrashDumps|INetCache|steamapps|Battle\.net\\Cache|Microsoft\\Windows Defender|Malwarebytes)\\", RegexOptions.IgnoreCase);
 
+    /// <summary>
+    /// JavaScript that ships inside an application (OneDrive, Teams, Electron apps keep UI code as .js files in their
+    /// versioned folder) is not a dropped script. It counts as part of an app when its folder, or one of the two folders
+    /// above it, holds a program with a valid signature. A real dropper script sits alone in Temp or AppData.
+    /// </summary>
+    private static bool InSignedApp(CheckContext ctx, DirectoryInfo? dir, Dictionary<string, bool> cache)
+    {
+        for (int up = 0; dir is not null && up < 3; up++, dir = dir.Parent)
+        {
+            // Never climb to a top-level data folder: a signed program anywhere in AppData must not vouch for everything in it.
+            if (Regex.IsMatch(dir.FullName, @"\\(AppData\\(Local|Roaming|LocalLow)|ProgramData|Temp|Users\\[^\\]+)$", RegexOptions.IgnoreCase)) return false;
+            if (!cache.TryGetValue(dir.FullName, out var signed))
+            {
+                signed = false;
+                try
+                {
+                    foreach (var exe in dir.EnumerateFiles("*.exe").Concat(dir.EnumerateFiles("*.dll")).Take(12))
+                        if (ctx.Files.Get(exe.FullName) is { SignatureStatus: SignatureStatus.Valid }) { signed = true; break; }
+                }
+                catch { }
+                cache[dir.FullName] = signed;
+            }
+            if (signed) return true;
+        }
+        return false;
+    }
+
     public object? Run(CheckContext ctx)
     {
         var since = DateTime.Now.AddDays(-ctx.Options.RecentFileDays);
@@ -49,12 +76,14 @@ public sealed class RecentFilesCheck : ICheck
 
         var rows = new List<object>();
         var riskyFiles = new List<string>(); var scriptFiles = new List<string>();
+        var signedDirs = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         foreach (var f in found.OrderByDescending(f => f.CreationTime))
         {
             if (SelfIdentity.IsSelf(f.FullName, Binary.IsMatch(f.Name) ? ctx.Files.Get(f.FullName)?.SHA256 : null)) continue;
             var intel = Binary.IsMatch(f.Name) ? ctx.Files.Get(f.FullName) : null;
             var risk = intel is not null ? PathHeuristics.ExecutableRisk(intel)
-                     : Script.IsMatch(f.Name) && Regex.IsMatch(f.FullName, @"\\(AppData|ProgramData|Temp|Users\\Public)\\", RegexOptions.IgnoreCase) ? Risk.Medium : Risk.Info;
+                     : Script.IsMatch(f.Name) && Regex.IsMatch(f.FullName, @"\\(AppData|ProgramData|Temp|Users\\Public)\\", RegexOptions.IgnoreCase)
+                       && !(f.Extension.Equals(".js", StringComparison.OrdinalIgnoreCase) && InSignedApp(ctx, f.Directory, signedDirs)) ? Risk.Medium : Risk.Info;
             if (risk is Risk.High or Risk.Critical) riskyFiles.Add(f.FullName);
             if (intel is null && risk == Risk.Medium) scriptFiles.Add(f.FullName);
             rows.Add(new { Risk = risk, Created = f.CreationTime.ToString("s"), Path = f.FullName, Size = f.Length,

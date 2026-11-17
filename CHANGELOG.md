@@ -18,6 +18,7 @@ All notable changes to TriageKit. Versions follow semantic versioning; the beta 
 - Fewer false alarms: programs inside downloaded ZIPs are judged by the malware rules instead of being listed; only typical lures (shortcuts, Windows scripts, a lone top-level script) are reported. Password-protected archives and accounts without a required password are Info.
 - "Unsigned programs recently created" and "scripts recently created" findings now name the files.
 - The CI pipeline runs a full offline check on a fresh Windows runner and keeps its results.
+- Fixed: on a fresh Windows 11 the app window could stay black. WebView2 always runs its browser without admin rights, as the person signed in to the desktop, so that account can now write the window's profile folder (still closed to other users). If the window ever fails to start, TriageKit now says why instead of showing an empty window, and it recovers from a crashed page.
 
 ## 0.14.0 — free for everyone
 

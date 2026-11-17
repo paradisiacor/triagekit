@@ -64,11 +64,19 @@ internal static class SecureFolder
     public static void EnsurePrivate(string path) => Apply(path, usersRead: false);
 
     /// <summary>
+    /// The app window's WebView2 profile. WebView2 never runs elevated: even when TriageKit runs as administrator, its
+    /// browser processes are started without admin rights as the person signed in to the desktop, so that account
+    /// (and only that account, besides SYSTEM and Administrators) must be able to write here. The elevated app itself
+    /// never reads anything back from this folder; it only fixes ownership and permissions.
+    /// </summary>
+    public static void EnsureBrowserProfile(string path, SecurityIdentifier desktopUser) => Apply(path, usersRead: false, desktopUser);
+
+    /// <summary>
     /// Standard users can create folders in ProgramData, so a malicious process could make ours first and stay its owner
     /// (and so keep the right to rewrite the ACL), or make it a junction pointing somewhere else. We refuse links, take
     /// ownership for Administrators and reset the ACL on everything already inside.
     /// </summary>
-    private static void Apply(string path, bool usersRead)
+    private static void Apply(string path, bool usersRead, SecurityIdentifier? writer = null)
     {
         RefuseLinks(path);
         var dir = Directory.CreateDirectory(path);
@@ -81,10 +89,12 @@ internal static class SecureFolder
         sec.AddAccessRule(new FileSystemAccessRule(Admins, FileSystemRights.FullControl, inherit, PropagationFlags.None, AccessControlType.Allow));
         if (usersRead)
             sec.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null), FileSystemRights.ReadAndExecute, inherit, PropagationFlags.None, AccessControlType.Allow));
+        if (writer is not null && writer != Admins && writer != SystemSid)
+            sec.AddAccessRule(new FileSystemAccessRule(writer, FileSystemRights.Modify | FileSystemRights.Synchronize, inherit, PropagationFlags.None, AccessControlType.Allow));
         dir.SetAccessControl(sec);
         // Children created earlier (possibly by someone else) get the same owner and inherit the new ACL. Walked by
         // hand so we never step into a junction (its target would get our ownership and ACL changes).
-        Secure(dir);
+        Secure(dir, writer);
     }
 
     private static readonly SecurityIdentifier TrustedInstaller = new("S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464");
@@ -93,8 +103,8 @@ internal static class SecureFolder
     /// app window's WebView2 profile, which Windows creates as that account when it's set to "object creator" owner.
     /// Elsewhere a file owned by an admin account may have been made by malware running unelevated under it.
     /// </summary>
-    private static bool Trusted(IdentityReference? owner, string path) =>
-        owner is SecurityIdentifier sid && (sid == Admins || sid == SystemSid || sid == TrustedInstaller ||
+    private static bool Trusted(IdentityReference? owner, string path, SecurityIdentifier? writer = null) =>
+        owner is SecurityIdentifier sid && (sid == Admins || sid == SystemSid || sid == TrustedInstaller || (writer is not null && sid == writer) ||
             (path.Contains(@"\WebView2", StringComparison.OrdinalIgnoreCase) && IsLocalAdmin(sid)));
 
     [System.Runtime.InteropServices.DllImport("netapi32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
@@ -123,7 +133,7 @@ internal static class SecureFolder
         catch { return false; }
     }
 
-    private static void Secure(DirectoryInfo dir)
+    private static void Secure(DirectoryInfo dir, SecurityIdentifier? writer = null)
     {
         foreach (var child in dir.EnumerateFileSystemInfos("*", new EnumerationOptions { RecurseSubdirectories = false, IgnoreInaccessible = true, AttributesToSkip = 0 }))
         {
@@ -137,7 +147,7 @@ internal static class SecureFolder
             try { owner = child is DirectoryInfo od ? od.GetAccessControl().GetOwner(typeof(SecurityIdentifier)) : ((FileInfo)child).GetAccessControl().GetOwner(typeof(SecurityIdentifier)); } catch { }
             if (child.Name.Contains(".untrusted-", StringComparison.Ordinal)) continue;   // already set aside, never used
             // Only act on an owner we could actually read; an unreadable owner is left to the folder ACL above.
-            if (owner is not null && !Trusted(owner, child.FullName) && child is DirectoryInfo ud)
+            if (owner is not null && !Trusted(owner, child.FullName, writer) && child is DirectoryInfo ud)
             {
                 // A folder made by someone else: move it aside the same way (it may hide files held open for writing).
                 var asideDir = ud.FullName + ".untrusted-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss");
@@ -145,7 +155,7 @@ internal static class SecureFolder
                 catch (Exception ex) { throw new UnauthorizedAccessException($"{ud.FullName} was created by another user and is in use. Close the program holding it, or delete it, then try again.", ex); }
                 continue;
             }
-            if (owner is not null && child is FileInfo uf && !Trusted(owner, child.FullName))
+            if (owner is not null && child is FileInfo uf && !Trusted(owner, child.FullName, writer))
             {
                 // Created by a non-admin: it may still be held open for writing, and an open handle keeps working after
                 // an ACL change. Move it aside (never trusted again) so the service starts from a fresh file.
@@ -162,9 +172,9 @@ internal static class SecureFolder
                     // A subfolder we protected on purpose (admin-only "Private", the per-viewer "View" copies) keeps its
                     // own permissions: making it inherit from here would open it to every user.
                     var current = cd.GetAccessControl();
-                    if (current.AreAccessRulesProtected && Trusted(owner, cd.FullName)) continue;
+                    if (current.AreAccessRulesProtected && Trusted(owner, cd.FullName, writer)) continue;
                     var cs = new DirectorySecurity(); cs.SetOwner(Admins); cs.SetAccessRuleProtection(false, false); cd.SetAccessControl(cs);
-                    Secure(cd);
+                    Secure(cd, writer);
                 }
                 else if (child is FileInfo cf)
                 {

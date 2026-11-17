@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, FileText, FolderOpen, Copy, ExternalLink, Sparkles, ChevronDown, ScanSearch, Play, Lightbulb, CheckCheck, Share2, EyeOff, X } from 'lucide-react';
@@ -19,6 +19,14 @@ export default function Findings() {
   const [showAll, setShowAll] = useState(false);
   const [accepting, setAccepting] = useState<Finding | null>(null);
   const [showAccepted, setShowAccepted] = useState(false);
+
+  // A short list is shown straight away; only long lists start folded so the page opens on "what to do first".
+  const autoOpened = useRef(false);
+  useEffect(() => {
+    if (!d || autoOpened.current) return;
+    autoOpened.current = true;
+    if (d.findings.length <= 15) setShowAll(true);
+  }, [d]);
 
   // Deep links from the overview ("area:net" or a rule id).
   useEffect(() => {
