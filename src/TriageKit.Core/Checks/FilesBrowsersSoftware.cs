@@ -48,24 +48,28 @@ public sealed class RecentFilesCheck : ICheck
         }
 
         var rows = new List<object>();
-        int risky = 0, scripts = 0;
+        var riskyFiles = new List<string>(); var scriptFiles = new List<string>();
         foreach (var f in found.OrderByDescending(f => f.CreationTime))
         {
             if (SelfIdentity.IsSelf(f.FullName, Binary.IsMatch(f.Name) ? ctx.Files.Get(f.FullName)?.SHA256 : null)) continue;
             var intel = Binary.IsMatch(f.Name) ? ctx.Files.Get(f.FullName) : null;
             var risk = intel is not null ? PathHeuristics.ExecutableRisk(intel)
                      : Script.IsMatch(f.Name) && Regex.IsMatch(f.FullName, @"\\(AppData|ProgramData|Temp|Users\\Public)\\", RegexOptions.IgnoreCase) ? Risk.Medium : Risk.Info;
-            if (risk is Risk.High or Risk.Critical) risky++;
-            if (intel is null && risk == Risk.Medium) scripts++;
+            if (risk is Risk.High or Risk.Critical) riskyFiles.Add(f.FullName);
+            if (intel is null && risk == Risk.Medium) scriptFiles.Add(f.FullName);
             rows.Add(new { Risk = risk, Created = f.CreationTime.ToString("s"), Path = f.FullName, Size = f.Length,
                            Signer = intel?.Signer, Signature = intel?.SignatureStatus.ToString() ?? "n/a (script)", SHA256 = intel?.SHA256 });
         }
-        if (risky > 0)
-            ctx.Add(Severity.Medium, "Files", $"{risky} unsigned program(s) recently created in risky folders", "See the Recent files tab (sorted by risk).",
-                    "Check where these files came from and look up their hashes on VirusTotal.", ruleId: "files.unsigned-risky", mitre: "T1105");
-        if (scripts > 0)
-            ctx.Add(Severity.Low, "Files", $"{scripts} script file(s) recently created in AppData/ProgramData/Temp", "Scripts in these folders are a common way malware gets started.",
-                    "Make sure you recognise these scripts.", ruleId: "files.scripts", mitre: "T1059");
+        // The findings name the files, so they can be acted on without opening the full report.
+        static string List(List<string> files) => string.Join("\n", files.Take(8)) + (files.Count > 8 ? $"\n…and {files.Count - 8} more (full list in the report)" : "");
+        if (riskyFiles.Count > 0)
+            ctx.Add(Severity.Medium, "Files", $"{riskyFiles.Count} unsigned program(s) recently created in risky folders",
+                    List(riskyFiles) + "\nUnsigned programs in Temp, AppData or Public folders are how most malware arrives.",
+                    "If you don't recognise a file, don't run it; check where it came from and look up its SHA-256 on VirusTotal.", riskyFiles, ruleId: "files.unsigned-risky", mitre: "T1105");
+        if (scriptFiles.Count > 0)
+            ctx.Add(Severity.Low, "Files", $"{scriptFiles.Count} script file(s) recently created in AppData/ProgramData/Temp",
+                    List(scriptFiles) + "\nScripts in these folders are a common way malware gets started.",
+                    "Make sure you recognise these scripts.", scriptFiles, ruleId: "files.scripts", mitre: "T1059");
         if (found.Count >= ctx.Options.RecentFileMaxItems)
             ctx.Add(Severity.Info, "Files", $"Recent-file sweep stopped at {ctx.Options.RecentFileMaxItems} items", "", "Increase RecentFileMaxItems in config.json for a deeper sweep.");
         return rows;

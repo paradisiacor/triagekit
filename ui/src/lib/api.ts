@@ -18,6 +18,12 @@ if (host) {
   });
 }
 
+/** Hands dropped files to the app. WebView2 passes them to the host with their real paths; page code never sees a path. */
+export function sendFiles(files: FileList) {
+  if (host?.postMessageWithAdditionalObjects) host.postMessageWithAdditionalObjects({ cmd: 'safestart.drop' }, files);
+  else if (__PREVIEW__) { emit('safestart.dropped', { token: 'preview', name: files[0]?.name ?? 'download.zip', path: 'C:\\Users\\you\\Downloads\\' + (files[0]?.name ?? 'download.zip'), folder: false, size: files[0]?.size ?? 0 }); }
+}
+
 export function on(name: string, fn: Listener) {
   if (!listeners.has(name)) listeners.set(name, new Set());
   listeners.get(name)!.add(fn);

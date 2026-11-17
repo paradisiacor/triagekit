@@ -5,6 +5,7 @@ using TriageKit.Core.Engine;
 using TriageKit.Core.Intel;
 using TriageKit.Core.Platform;
 using TriageKit.Core.Reporting;
+using TriageKit.Core.Reputation;
 using TriageKit.Core.Rules;
 
 namespace TriageKit.Cli;
@@ -80,7 +81,7 @@ public sealed class AppConfig
     }
 }
 
-public sealed class ScanRequest
+public sealed record ScanRequest
 {
     public required string BaseDirectory { get; init; }        // where TriageKit.exe, rules\ and tools\ live
     public required string OutputRoot { get; init; }
@@ -97,8 +98,8 @@ public sealed class ScanRequest
     public string? Technician { get; init; }
     public Action<string>? Status { get; init; }
     public Action<string, int, int>? Progress { get; init; }
-    /// <summary>A check finished: its name and how long it took in milliseconds.</summary>
-    public Action<string, long>? CheckFinished { get; init; }
+    /// <summary>A check finished: its name, time in milliseconds and whether it really ran.</summary>
+    public Action<CheckOutcome>? CheckFinished { get; init; }
     /// <summary>A check starts running (checks in later groups wait for earlier ones).</summary>
     public Action<string>? CheckStarted { get; init; }
     public CancellationToken Cancellation { get; init; }
@@ -153,7 +154,47 @@ public static class ScanRunner
         Directory.CreateDirectory(outDir);
         using var log = new StreamWriter(Path.Combine(outDir, "collector.log")) { AutoFlush = true };
         void Log(string m) { lock (log) log.WriteLine($"{DateTime.Now:HH:mm:ss} {m}"); }
+        var (ctx, meta) = Prepare(req, version, outDir, Log);
+        var result = new Scanner(CheckCatalog.All()).Run(ctx, meta, (name, i, n) => { Log($"Check {i}/{n}: {name}"); req.Progress?.Invoke(name, i, n); }, req.Cancellation, req.CheckFinished, req.CheckStarted);
+        foreach (var t in result.Timings) Log($"Timing {t.Key}: {t.Value} ms");
+        var (html, json) = ReportWriter.Write(result, outDir);
+        Log($"Report written: {html}");
+        return new ScanOutcome(result, html, json, outDir, meta.RulePackVersion);
+    }
 
+    /// <summary>Safe Start › Install Watch: runs the snapshot checks (no report is written).</summary>
+    public static Core.SafeStart.InstallWatch.Snapshot Snapshot(ScanRequest req, string version)
+    {
+        var work = Path.Combine(Path.GetTempPath(), "TriageKit-watch-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(work);
+        try
+        {
+            var (ctx, meta) = Prepare(req with { Quick = false, Modules = new[] { "security" } }, version, work, _ => { });
+            var checks = CheckCatalog.All().Where(c => Core.SafeStart.InstallWatch.SnapshotChecks.Contains(c.Name)).ToList();
+            var result = new Scanner(checks).Run(ctx, meta, (name, i, n) => req.Progress?.Invoke(name, i, n), req.Cancellation, req.CheckFinished, req.CheckStarted);
+            if (result.Stopped) throw new OperationCanceledException();
+            return Core.SafeStart.InstallWatch.FromScan(result, version);
+        }
+        finally { try { Directory.Delete(work, true); } catch { } }
+    }
+
+    /// <summary>Safe Start › Check a download.</summary>
+    public static Core.SafeStart.DownloadCheck.Result CheckDownload(ScanRequest req, string version, string path, Action<string>? progress)
+    {
+        var work = Path.Combine(Path.GetTempPath(), "TriageKit-check-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(work);
+        try
+        {
+            var (ctx, _) = Prepare(req with { Quick = false, Modules = new[] { "security" } }, version, work, _ => { });
+            var providers = new IReputationProvider[] { new CirclHashlookupProvider(), new DefenderFileScanProvider(), new MalwareBazaarProvider(), new VirusTotalProvider() };
+            var rules = Core.Yara.YaraRuleSet.LoadAll(ctx.Options);
+            return new Core.SafeStart.DownloadCheck(ctx, providers, progress, rules).Run(path);
+        }
+        finally { try { Directory.Delete(work, true); } catch { } }
+    }
+
+    private static (CheckContext Ctx, ScanMeta Meta) Prepare(ScanRequest req, string version, string outDir, Action<string> Log)
+    {
         var cfg = req.Config;
         bool offline = req.Offline || !cfg.OnlineLookups;
         var rulesDir = Path.Combine(req.BaseDirectory, "rules");
@@ -189,10 +230,6 @@ public static class ScanRunner
         if (req.AllowUnsignedRules)
             ctx.Add(Severity.Info, "Collector", "Unsigned rules were allowed (--allow-unsigned-rules)", "Only use this when writing and testing your own rules.", ruleId: "collector.rulepack-unsigned");
 
-        var result = new Scanner(CheckCatalog.All()).Run(ctx, meta, (name, i, n) => { Log($"Check {i}/{n}: {name}"); req.Progress?.Invoke(name, i, n); }, req.Cancellation, req.CheckFinished, req.CheckStarted);
-        foreach (var t in result.Timings) Log($"Timing {t.Key}: {t.Value} ms");
-        var (html, json) = ReportWriter.Write(result, outDir);
-        Log($"Report written: {html}");
-        return new ScanOutcome(result, html, json, outDir, meta.RulePackVersion);
+        return (ctx, meta);
     }
 }

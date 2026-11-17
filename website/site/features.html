@@ -45,13 +45,14 @@
     <div class="wrap fhero-text">
       <div class="label">Features · free for everyone</div>
       <h1>Everything it looks at.<br><b>Nothing it touches.</b></h1>
-      <p class="lede">Twelve categories, from the places malware hides to why your games stutter. Each finding names the exact file, key or setting, explains why it matters, and tells you how to fix it yourself. TriageKit reads; it never changes, deletes or uploads.</p>
+      <p class="lede">Safe Start for downloads, plus twelve areas from the places malware hides to why your games stutter. Each finding names the exact file, key or setting, explains why it matters, and tells you how to fix it yourself. TriageKit reads; it never changes, deletes or uploads.</p>
     </div>
   </section>
 
   <nav class="catnav wrap" aria-label="Feature categories">
     <div class="filter" data-filter hidden role="toolbar" aria-label="Show category">
       <button type="button" data-key="all" aria-pressed="true">All</button>
+      <button type="button" data-key="safestart">Safe Start</button>
       <button type="button" data-key="protection">Protection</button>
       <button type="button" data-key="startup">Startup</button>
       <button type="button" data-key="files">Files &amp; malware</button>
@@ -68,6 +69,17 @@
   </nav>
 
   <div class="wrap fcats">
+
+    <section class="fcat" id="safestart">
+      <header><span class="dot r"></span><div><div class="label">New in 0.15</div><h2>Safe Start</h2></div><p>Downloaded a game, a mod, a crack or a tool? Check it before you run it, then watch exactly what the install changes. Nothing is run, unpacked to disk or uploaded.</p></header>
+      <div class="fgrid">
+        <article><h3>Check a download</h3><p>A file, a folder or an archive (ZIP, RAR, 7z, TAR, GZip, also nested): every program, script and shortcut inside is checked in memory.</p><div class="ex h"><i>HIGH</i>Dangerous. Don't run it.</div></article>
+        <article><h3>Real signature checks inside archives</h3><p>Is it really signed by who it claims, and unchanged since signing? Checked without extracting anything.</p><div class="ex h"><i>HIGH</i>Program was changed after it was signed: setup.exe</div></article>
+        <article><h3>The tricks cracks use</h3><p>"Disable your antivirus" readmes, programs padded with filler to dodge antivirus uploads, disguised file types, fake installers, scripts packed into unsigned programs.</p><div class="ex h"><i>HIGH</i>Instructions to switch off your antivirus: README.txt</div></article>
+        <article><h3>Honest about what it couldn't see</h3><p>Password-protected files, oversized content and disk images are listed as not checked, never quietly called safe.</p><div class="ex m"><i>MED</i>Password-protected programs inside: Repack.rar</div></article>
+        <article><h3>Install Watch</h3><p>Snapshot, install, compare: new startup entries, services, Defender exclusions, root certificates, drivers, extensions, hosts and DNS changes, each judged.</p><div class="ex h"><i>HIGH</i>Defender exclusion added: Path C:\Users\…\AppData\Roaming\…</div></article>
+      </div>
+    </section>
 
     <section class="fcat" id="protection">
       <header><span class="dot g"></span><div><div class="label">01</div><h2>Antivirus &amp; protection</h2></div><p>Is your antivirus really on, current and unrestricted? Malware switches protection off quietly and adds itself to the exclusions.</p></header>

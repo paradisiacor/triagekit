@@ -30,10 +30,12 @@ internal sealed class Bridge
     private CancellationTokenSource? _scanCts;
     private volatile bool _scanning;
     private string? _exeSha;
+    private readonly SafeStartHost _safe;
 
     public Bridge(AppWindow win, string version)
     {
         _win = win; _version = version;
+        _safe = new SafeStartHost(win, _store, version, () => _scanning);
         Task.Run(async () =>
         {
             try { _store.ImportExisting(); } catch { }
@@ -48,6 +50,9 @@ internal sealed class Bridge
             }
         });
     }
+
+    /// <summary>Files dropped on the page (WebView2 passes them to the host directly, never through page code).</summary>
+    public void ReceiveFiles(IReadOnlyList<string> paths) => _safe.Dropped(paths);
 
     public void Receive(string json)
     {
@@ -96,6 +101,15 @@ internal sealed class Bridge
             case "app.restart":
                 if (Environment.ProcessPath is string me) { try { Process.Start(new ProcessStartInfo(me) { UseShellExecute = true }); } catch { } }
                 _win.Post(new { @event = "app.closing" }); _ = Task.Run(async () => { await Task.Delay(500); Environment.Exit(0); }); return true;
+            case "safestart.pick": return await _safe.Pick(Bool(a, "folder"));
+            case "safestart.check": return _safe.Check(Str(a, "token") ?? "");
+            case "safestart.cancel": _safe.Cancel(); return true;
+            case "safestart.history": return _safe.History();
+            case "safestart.get": return _safe.Get(Str(a, "id") ?? "");
+            case "watch.state": return _safe.WatchState();
+            case "watch.before": return _safe.WatchBefore();
+            case "watch.after": return _safe.WatchAfter();
+            case "watch.discard": return _safe.WatchDiscard();
             case "settings.get": return SettingsGet();
             case "settings.save": SettingsSave(a); return new { ok = true };
             case "agent.install": return await RunElevatedTask(() => Installer.Install(_version, _ => { }), "Daily protection is on. The first automatic check runs in about 5 minutes.");
@@ -304,6 +318,7 @@ internal sealed class Bridge
     private object StartScan(string mode, bool offline)
     {
         if (_scanning) throw new InvalidOperationException("A check is already running.");
+        if (_safe.Busy) throw new InvalidOperationException("Wait for Safe Start to finish.");
         bool quick = mode == "quick", deep = mode == "deep", doctor = mode == "doctor";
         _scanning = true;
         _scanCts = new CancellationTokenSource();
@@ -323,7 +338,7 @@ internal sealed class Bridge
                     BaseDirectory = AppContext.BaseDirectory, OutputRoot = _store.ReportsDir, Config = cfg, Quick = quick, Deep = deep, Offline = offline, Modules = modules, FolderSuffix = doctor ? "_doctor" : "",
                     Edition = _store.Installed ? "Installed" : "Portable", Installed = _store.Installed, Cancellation = token,
                     Progress = (name, i, n) => _win.Post(new { @event = "scan.progress", data = new { name, index = i, total = n } }),
-                    CheckFinished = (name, ms) => _win.Post(new { @event = "scan.checkDone", data = new { name, ms } }),
+                    CheckFinished = o => _win.Post(new { @event = "scan.checkDone", data = new { name = o.Name, ms = o.Ms, state = o.State, note = o.Note } }),
                     CheckStarted = name => _win.Post(new { @event = "scan.checkStart", data = new { name } }),
                     Status = m => { if ((DateTime.Now - lastStatus).TotalMilliseconds > 120) { lastStatus = DateTime.Now; _win.Post(new { @event = "scan.status", data = new { text = m } }); } },
                 }, _version);

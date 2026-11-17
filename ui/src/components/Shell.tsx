@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import clsx from 'clsx';
-import { LayoutGrid, Radar, ListChecks, History, ShieldCheck, Settings2, Info, Play, Lock, Stethoscope, ArrowUpCircle } from 'lucide-react';
+import { LayoutGrid, Radar, ListChecks, History, ShieldCheck, Settings2, Info, Play, Lock, Stethoscope, PackageSearch, ArrowUpCircle } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { go, startScan, useStore, type Route } from '../lib/store';
 import { VERDICT_COLOR } from '../lib/format';
@@ -12,6 +12,7 @@ const NAV: ({ id: Route; label: string; icon: any } | null)[] = [
   { id: 'findings', label: 'Findings', icon: ListChecks },
   { id: 'history', label: 'History', icon: History },
   null,
+  { id: 'safestart', label: 'Safe Start', icon: PackageSearch },
   { id: 'doctor', label: 'PC Doctor', icon: Stethoscope },
   { id: 'protection', label: 'Protection', icon: ShieldCheck },
   { id: 'settings', label: 'Settings', icon: Settings2 },

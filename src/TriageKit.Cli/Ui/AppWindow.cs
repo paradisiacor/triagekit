@@ -83,7 +83,15 @@ internal sealed class AppWindow : Form
         core.WebResourceRequested += (_, e) => Serve(core, e);
         core.NavigationStarting += (_, e) => { if (!e.Uri.StartsWith(Origin + "/", StringComparison.OrdinalIgnoreCase)) e.Cancel = true; };
         core.NewWindowRequested += (_, e) => { e.Handled = true; Bridge.OpenExternal(e.Uri); };
-        core.WebMessageReceived += (_, e) => { if (e.Source.StartsWith(Origin + "/", StringComparison.OrdinalIgnoreCase)) _bridge.Receive(e.WebMessageAsJson); };
+        core.WebMessageReceived += (_, e) =>
+        {
+            if (!e.Source.StartsWith(Origin + "/", StringComparison.OrdinalIgnoreCase)) return;
+            // Drag and drop: the page sends the dropped File objects with postMessageWithAdditionalObjects, and WebView2
+            // gives us their real paths here. The page itself never learns or chooses a path.
+            var files = e.AdditionalObjects?.OfType<CoreWebView2File>().Select(f => f.Path).ToList();
+            if (files is { Count: > 0 }) { _bridge.ReceiveFiles(files); return; }
+            _bridge.Receive(e.WebMessageAsJson);
+        };
         core.PermissionRequested += (_, e) => e.State = e.PermissionKind == CoreWebView2PermissionKind.ClipboardRead ? CoreWebView2PermissionState.Deny : CoreWebView2PermissionState.Deny;
         core.Navigate(Origin + "/index.html" + (_startPage is null ? "" : "#" + _startPage));
     }

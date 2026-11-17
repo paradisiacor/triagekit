@@ -61,7 +61,7 @@ public sealed class LivePerformanceCheck : ICheck
         if (!pdh.Ok || total == IntPtr.Zero || dpc == IntPtr.Zero || isr == IntPtr.Zero)
         {
             CheckContext.Note("Windows performance counters are unavailable (they may need repairing with \"lodctr /R\")");
-            return new { Ran = false, Limits = DoctorLimits.ForUi };
+            return new { Ran = false, Reason = "Windows performance counters are unavailable", Limits = DoctorLimits.ForUi };
         }
 
         var systemDisk = (Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\").TrimEnd('\\');   // "C:"
@@ -86,7 +86,7 @@ public sealed class LivePerformanceCheck : ICheck
         if (s.Dpc.ValidCount() == 0 && s.Cpu.ValidCount() == 0)
         {
             CheckContext.Note("Windows performance counters returned no values (they may need repairing with \"lodctr /R\")");
-            return new { Ran = false, Limits = DoctorLimits.ForUi };
+            return new { Ran = false, Reason = "Windows performance counters returned no values", Limits = DoctorLimits.ForUi };
         }
         var hogs = TopCpu(ctx, cpuStart, seconds);
 
@@ -675,7 +675,7 @@ public sealed class SensorsCheck : ICheck
                 (problem is null ? "" : problem + " ") +
                 "Windows doesn't share voltage, fan and most temperature readings without a hardware driver. TriageKit doesn't install one; it reads them from HWiNFO or LibreHardwareMonitor if one is running.",
                 "For a full hardware check: start HWiNFO (Sensors only, with \"Shared Memory Support\" on; the free version turns sharing off after 12 hours, so restart it if needed) or LibreHardwareMonitor, then run PC Doctor again.", null, ruleId: "doctor.sensors-missing");
-            return new { Source = (string?)null, Problem = problem, Limits = DoctorLimits.ForUi };
+            return new { Ran = false, Reason = problem ?? "No sensor app running (HWiNFO or LibreHardwareMonitor)", Source = (string?)null, Problem = problem, Limits = DoctorLimits.ForUi };
         }
         var pc = PcProfile.Detect();
         var window = TimeSpan.FromDays(30);

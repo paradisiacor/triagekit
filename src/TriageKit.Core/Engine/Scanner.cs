@@ -130,7 +130,7 @@ public sealed class Scanner
     public Scanner(IEnumerable<ICheck> checks) => _checks = checks.OrderBy(c => c.Order).ToList();
 
     /// <param name="progress">Called when a check finishes: its name, how many have finished, how many there are, and how long it took (ms).</param>
-    public ScanResult Run(CheckContext ctx, ScanMeta meta, Action<string, int, int>? progress = null, CancellationToken stop = default, Action<string, long>? finished = null, Action<string>? starting = null)
+    public ScanResult Run(CheckContext ctx, ScanMeta meta, Action<string, int, int>? progress = null, CancellationToken stop = default, Action<CheckOutcome>? finished = null, Action<string>? starting = null)
     {
         var started = DateTime.Now;
         meta.Started = started.ToString("yyyy-MM-dd HH:mm:ss");
@@ -184,7 +184,7 @@ public sealed class Scanner
             }
             lock (result) { result.Data[check.Name] = data; result.Timings[check.Name] = sw.ElapsedMilliseconds; }
             var n = Interlocked.Increment(ref done);
-            finished?.Invoke(check.Name, sw.ElapsedMilliseconds);
+            finished?.Invoke(CheckOutcome.From(check.Name, sw.ElapsedMilliseconds, data));
             progress?.Invoke(check.Name, n, toRun.Count);
         }
 
@@ -322,4 +322,19 @@ public static class Highlights
             })
             .OrderBy(h => h.Severity).ThenByDescending(h => h.Count)
             .Take(max).ToList();
+}
+
+/// <summary>How a check ended, for the live scan screen: "ok", "skipped" (it chose not to run: switched off or a
+/// required tool is missing) or "failed" (error, timeout, stopped). A skipped or failed check must never look checked.</summary>
+public sealed record CheckOutcome(string Name, long Ms, string State, string? Note)
+{
+    public static CheckOutcome From(string name, long ms, object? data)
+    {
+        if (data is null) return new(name, ms, "ok", null);
+        var t = data.GetType();
+        if (t.GetProperty("Error")?.GetValue(data) is string err) return new(name, ms, "failed", err);
+        if (t.GetProperty("Ran")?.GetValue(data) is false)
+            return new(name, ms, "skipped", t.GetProperty("Reason")?.GetValue(data) as string);
+        return new(name, ms, "ok", null);
+    }
 }

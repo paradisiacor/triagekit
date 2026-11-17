@@ -11,9 +11,10 @@ import HistoryPage from './pages/History';
 import Protection from './pages/Protection';
 import { AboutPage, SettingsPage } from './pages/Other';
 import Doctor from './pages/Doctor';
+import SafeStart from './pages/SafeStart';
 
 const PAGES: Record<Route, () => JSX.Element> = {
-  overview: Overview, scan: ScanPage, findings: Findings, history: HistoryPage, protection: Protection, settings: SettingsPage, about: AboutPage, doctor: Doctor,
+  overview: Overview, scan: ScanPage, findings: Findings, history: HistoryPage, protection: Protection, settings: SettingsPage, about: AboutPage, doctor: Doctor, safestart: SafeStart,
 };
 
 export default function App() {

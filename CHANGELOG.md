@@ -2,6 +2,23 @@
 
 All notable changes to TriageKit. Versions follow semantic versioning; the beta channel gets every release.
 
+## 0.15.0 — Safe Start
+
+### New: Safe Start
+- **Check a download** before running it: a file, a folder or an archive (ZIP, RAR, 7z, TAR, GZip, also nested). Nothing is unpacked to disk or run.
+  - Programs inside archives get a real signature check in memory (signature valid, file unchanged since signing, trusted signer).
+  - The built-in malware rules, plus red flags typical for malware-laced cracks and fake downloads: disguised file types, fake installers of popular apps, programs padded with filler to dodge antivirus uploads, scripts packed into unsigned programs, "disable your antivirus" readmes, password-protected programs, unusual runnable file types, shortcuts that start hidden commands, Office macros.
+  - File fingerprints are looked up with reputation services if online lookups are allowed; Microsoft Defender checks files on disk.
+  - An honest verdict (no threats found / suspicious / dangerous / known malware) that lists everything that couldn't be checked.
+  - Archive-bomb protection: size, ratio and depth limits. Also from the command line: `TriageKit.exe check <file or folder>`.
+- **Install Watch:** a "before" snapshot, install or run something, then compare. Shows new startup entries, tasks and services, Defender exclusions and switched-off protections, root certificates, drivers, browser extensions, hosts/proxy/DNS changes, new user accounts and installed programs, each judged, plus any new findings. The snapshot survives closing the app or restarting.
+
+### Release readiness
+- Checks that didn't run (switched off, tool not installed) show as "skipped" and checks that failed as "didn't finish" on the scan screen, never with a green tick.
+- Fewer false alarms: programs inside downloaded ZIPs are judged by the malware rules instead of being listed; only typical lures (shortcuts, Windows scripts, a lone top-level script) are reported. Password-protected archives and accounts without a required password are Info.
+- "Unsigned programs recently created" and "scripts recently created" findings now name the files.
+- The CI pipeline runs a full offline check on a fresh Windows runner and keeps its results.
+
 ## 0.14.0 — free for everyone
 
 TriageKit no longer has plans or licences. Every check, PC Doctor, Gaming and daily protection are included for everyone.

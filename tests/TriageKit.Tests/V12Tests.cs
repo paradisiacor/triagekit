@@ -473,3 +473,30 @@ public class AccountTheftNamingTests
         finally { Directory.Delete(dir, true); }
     }
 }
+
+public class ReadinessNoiseTests
+{
+    [Theory]
+    [InlineData("setup.exe", false)]                                 // programs in downloads are normal; malware rules judge them
+    [InlineData("HWiNFO64.exe", false)]
+    [InlineData("plugin/assets/admin.js", false)]                    // web projects are full of .js
+    [InlineData("._admin.js", false)]                                // macOS metadata
+    [InlineData("__MACOSX/x/run.bat", false)]
+    [InlineData("invoice.js", true)]                                 // a lone top-level script is the classic lure
+    [InlineData("docs/Resume.pdf.lnk", true)]
+    [InlineData("files/install.vbs", true)]
+    [InlineData("crack/run.bat", true)]
+    [InlineData("update.hta", true)]
+    public void ArchiveLuresAreSpecific(string entry, bool lure) => Assert.Equal(lure, TriageKit.Core.Yara.YaraCheck.DeliveryLure(entry));
+
+    [Fact]
+    public void OutcomeTellsSkippedAndFailedApart()
+    {
+        Assert.Equal("skipped", CheckOutcome.From("a", 1, new { Ran = false, Reason = "Disabled in config" }).State);
+        Assert.Equal("Disabled in config", CheckOutcome.From("a", 1, new { Ran = false, Reason = "Disabled in config" }).Note);
+        Assert.Equal("failed", CheckOutcome.From("a", 1, new { Error = "Timed out" }).State);
+        Assert.Equal("ok", CheckOutcome.From("a", 1, new { Ran = true, Items = 3 }).State);
+        Assert.Equal("ok", CheckOutcome.From("a", 1, new List<object>()).State);
+        Assert.Equal("ok", CheckOutcome.From("a", 1, null).State);
+    }
+}

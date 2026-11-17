@@ -16,11 +16,21 @@ jobs:
         with: { global-json-file: global.json }
       - run: dotnet test TriageKit.sln -c Release
       - run: dotnet publish src/TriageKit.Cli -c Release -o artifacts/TriageKit
-      # Smoke test on a real Windows runner: quick scan, no network lookups, must produce a report.
-      - run: artifacts/TriageKit/TriageKit.exe --quick --offline --no-open --no-pause --yes --out artifacts/smoke
-      - run: if (-not (Get-ChildItem artifacts/smoke -Recurse -Filter report.html)) { exit 1 }
+      # Smoke test on a real Windows runner: full check, no network lookups, must produce a report.
+      - name: Smoke scan (full check, offline)
         shell: pwsh
+        timeout-minutes: 30
+        run: |
+          # TriageKit.exe is a Windows app: wait for it explicitly. Exit codes 0/10/20/30 are scan verdicts, not errors.
+          $p = Start-Process -FilePath artifacts/TriageKit/TriageKit.exe -ArgumentList '--offline','--no-open','--no-pause','--yes','--out','artifacts/smoke' -Wait -PassThru -NoNewWindow
+          Write-Host "Scan exit code: $($p.ExitCode)"
+          if ($p.ExitCode -notin 0,10,20,30) { throw "Scan failed with exit code $($p.ExitCode)" }
+          if (-not (Get-ChildItem artifacts/smoke -Recurse -Filter report.html)) { throw "No report was written" }
       - run: Get-FileHash artifacts/TriageKit/TriageKit.exe -Algorithm SHA256 | Format-List
         shell: pwsh
       - uses: actions/upload-artifact@v4
         with: { name: TriageKit-win-x64, path: artifacts/TriageKit }
+      # The smoke scan ran on a freshly installed Windows: its results show false alarms and checks that fail on clean PCs.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: clean-windows-scan, path: "artifacts/smoke/**/results.json\nartifacts/smoke/**/collector.log", if-no-files-found: warn }

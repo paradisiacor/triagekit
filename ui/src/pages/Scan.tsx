@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, Loader2, Circle, X, Radar, Zap, Play, ArrowRight, FileText, RefreshCw, TriangleAlert, ScanSearch } from 'lucide-react';
+import { Check, Loader2, Circle, Minus, X, Radar, Zap, Play, ArrowRight, FileText, RefreshCw, TriangleAlert, ScanSearch } from 'lucide-react';
 import clsx from 'clsx';
 import { call } from '../lib/api';
 import { get, go, safe, set, startScan, useStore } from '../lib/store';
@@ -106,16 +106,24 @@ export default function ScanPage() {
         {sc.checks.map((c, i) => (
           <motion.div key={c.name} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }}
             className={clsx('glass flex items-center gap-3 !rounded-2xl px-4 py-3.5 transition-colors', c.state === 'run' && '!border-brand/40 !bg-brand/[0.06]')}>
-            <div className={clsx('grid h-8 w-8 place-items-center rounded-xl', c.state === 'ok' ? 'bg-ok/15 text-ok' : c.state === 'run' ? 'bg-brand/15 text-brand-2' : 'bg-white/[0.05] text-dim')}>
-              {c.state === 'ok' ? <Check className="h-4 w-4" /> : c.state === 'run' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Circle className="h-3.5 w-3.5" strokeDasharray="3 3" />}
+            <div title={c.note ?? undefined} className={clsx('grid h-8 w-8 place-items-center rounded-xl', c.state === 'ok' ? (c.outcome === 'skipped' ? 'bg-white/[0.05] text-dim' : c.outcome === 'failed' ? 'bg-med/15 text-med' : 'bg-ok/15 text-ok') : c.state === 'run' ? 'bg-brand/15 text-brand-2' : 'bg-white/[0.05] text-dim')}>
+              {c.state === 'ok' ? (c.outcome === 'skipped' ? <Minus className="h-4 w-4" /> : c.outcome === 'failed' ? <TriangleAlert className="h-4 w-4" /> : <Check className="h-4 w-4" />) : c.state === 'run' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Circle className="h-3.5 w-3.5" strokeDasharray="3 3" />}
             </div>
-            <div className="min-w-0">
-              <div className={clsx('truncate text-[13.5px]', c.state === 'wait' ? 'text-muted' : 'text-ink')}>{c.name}</div>
-              <div className="font-mono text-[11px] text-dim">{c.state === 'ok' ? (c.ms != null ? (c.ms < 1000 ? `${Math.max(1, Math.round(c.ms))} ms` : `${(c.ms / 1000).toFixed(1)} s`) : 'done') : c.state === 'run' ? 'checking…' : 'waiting'}</div>
+            <div className="min-w-0" title={c.note ?? undefined}>
+              <div className={clsx('truncate text-[13.5px]', c.state === 'wait' || c.outcome === 'skipped' ? 'text-muted' : 'text-ink')}>{c.name}</div>
+              <div className={clsx('truncate font-mono text-[11px]', c.outcome === 'failed' ? 'text-med' : 'text-dim')}>{c.state === 'ok' ? (c.outcome === 'skipped' ? skipText(c.note) : c.outcome === 'failed' ? "didn't finish" : (c.ms != null ? (c.ms < 1000 ? `${Math.max(1, Math.round(c.ms))} ms` : `${(c.ms / 1000).toFixed(1)} s`) : 'done')) : c.state === 'run' ? 'checking…' : 'waiting'}</div>
             </div>
           </motion.div>
         ))}
       </div>
     </div>
   );
+}
+
+/** Short, honest label for a check that chose not to run (the full reason is in the tooltip and the report). */
+function skipText(note?: string | null): string {
+  const n = (note ?? '').toLowerCase();
+  if (n.includes('disabled') || n.startsWith('off')) return 'skipped · switched off';
+  if (n.includes('not found') || n.includes('no sensor')) return 'skipped · not installed';
+  return 'skipped';
 }

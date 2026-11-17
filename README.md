@@ -12,6 +12,7 @@ Free for everyone. No account, no payments, no telemetry.
 ## What it checks
 | Area | Examples |
 |---|---|
+| **Safe Start** | Check a download (file, folder, ZIP/RAR/7z/TAR, nested) before running it; Install Watch compares a before/after snapshot of an install |
 | Antivirus & protection | Defender switched off, exclusions you didn't add, protection history |
 | Startup & persistence | Run keys, services, scheduled tasks, WMI subscriptions, Winlogon, IFEO, replaced accessibility tools |
 | Files & malware | Built-in signed YARA-compatible rules, archives and Office macros, shortcuts, Run-box "verify you're human" commands, reputation lookups (hash only, opt-in) |

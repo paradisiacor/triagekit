@@ -26,6 +26,18 @@ public static class YaraRuleSet
         return rules;
     }
 
+    /// <summary>Built-in rules plus the rules of a trusted (signed) rule pack, as the YARA check uses them.</summary>
+    public static List<YaraRule> LoadAll(ScanOptions o, List<string>? errors = null)
+    {
+        var rules = LoadBuiltIn();
+        if (!o.ExternalRulesTrusted) return rules;
+        var names = rules.Select(r => r.Name).ToHashSet();
+        var manifest = Path.Combine(o.RulesDirectory, TriageKit.Core.Rules.RulePack.ManifestName);
+        var allowed = File.Exists(manifest) ? TriageKit.Core.Rules.RulePack.SignedFiles(o.RulesDirectory) : null;
+        rules.AddRange(LoadDirectory(Path.Combine(o.RulesDirectory, "yara"), errors ?? new List<string>(), names, allowed));
+        return rules;
+    }
+
     /// <summary>Additional rule files from a directory. Broken files are skipped and reported, never fatal.</summary>
     public static List<YaraRule> LoadDirectory(string dir, List<string> errors, ISet<string> existingNames, ISet<string>? allowedFiles = null)
     {
@@ -130,7 +142,7 @@ public sealed class YaraCheck : ICheck
         }
         if (incompleteFiles > 0) CheckContext.Note($"{incompleteFiles} file(s) hit the per-file time limit and were only partly checked");
         if (unreadable.Count > 0)
-            ctx.Add(Severity.Low, "Files", $"{unreadable.Count} archive(s) could not be fully checked", string.Join("\n", unreadable.Take(10)),
+            ctx.Add(Severity.Info, "Files", $"{unreadable.Count} archive(s) could not be fully checked", string.Join("\n", unreadable.Take(10)),
                     "Password-protected or oversized archives can hide malware. Only open them if you trust the sender.", unreadable, null, "archive.unreadable");
         return new { Ran = true, Rules = rules.Count, RuleErrors = errors, Scanned = scanned, Containers = containers, Skipped = skipped, PartlyChecked = incompleteFiles, Matches = rows };
     }
@@ -162,6 +174,18 @@ public sealed class YaraCheck : ICheck
 
     private static readonly Regex InnerWanted = new(@"(\.(exe|dll|scr|com|cpl|ps1|psm1|vbs|vbe|js|jse|mjs|cjs|py|pyw|au3|ahk|hta|bat|cmd|wsf|lnk|msi|iso|img)$|^vbaProject\.bin$)", RegexOptions.IgnoreCase);
 
+    /// <summary>Files inside a downloaded ZIP that are typical malware lures: shortcuts and Windows script types anywhere,
+    /// and JavaScript only at the top level (web projects and plugins are full of .js files). Programs (.exe) are normal
+    /// in downloads and are judged by the malware rules instead; macOS "._" metadata files are ignored.</summary>
+    internal static bool DeliveryLure(string entry)
+    {
+        var name = entry.Replace('\\', '/');
+        var file = name[(name.LastIndexOf('/') + 1)..];
+        if (file.StartsWith("._", StringComparison.Ordinal) || name.StartsWith("__MACOSX/", StringComparison.OrdinalIgnoreCase)) return false;
+        if (Regex.IsMatch(file, @"\.(scr|jse|vbs|vbe|hta|lnk|wsf|bat|cmd|ps1)$", RegexOptions.IgnoreCase)) return true;
+        return !name.Contains('/') && file.EndsWith(".js", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static void ScanContainer(CheckContext ctx, YaraScanner scanner, string path, List<object> rows, List<string> unreadable)
     {
         var fi = new FileInfo(path);
@@ -179,7 +203,7 @@ public sealed class YaraCheck : ICheck
                 if (e.Name.EndsWith("vbaProject.bin", StringComparison.OrdinalIgnoreCase)) { macroSources.AddRange(VbaMacros.ExtractSources(e.Data)); if (macroSources.Count == 0) macroSources.Add(""); continue; }
                 if (e.Name.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase)) CheckShortcut(ctx, $"{path} » {e.Name}", e.Data, rows);
                 ScanBytes(ctx, scanner, path, e.Name, e.Data, rows);
-                if (Regex.IsMatch(e.Name, @"\.(exe|scr|js|jse|vbs|vbe|hta|lnk|wsf|bat|cmd|ps1)$", RegexOptions.IgnoreCase) && InRiskyFolder(path) && path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) && Recent(fi, ctx))
+                if (DeliveryLure(e.Name) && InRiskyFolder(path) && path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) && Recent(fi, ctx))
                     ctx.Add(Severity.Low, "Files", $"Recent download contains a program or script: {Path.GetFileName(path)} » {Path.GetFileName(e.Name)}",
                             $"{path}\nInside: {e.Name}", "Archives that contain scripts or shortcuts are a common way to deliver malware. Only run it if you trust the sender.",
                             new { Path = path, Entry = e.Name }, "T1566.001", "archive.executable-inside");

@@ -8,6 +8,7 @@ TriageKit is free and open source (GPL-3.0-only). Released versions are listed i
 - [ ] Throttling detection for AMD and Intel graphics through HWiNFO
 
 ## Next
+- [ ] Safe Start: look inside ISO/IMG disk images; "Check with TriageKit" in Explorer's right-click menu (installed edition)
 - [ ] "Was I robbed?" timeline: when a session could have been stolen, from the evidence already collected
 - [ ] Clipboard self-test: does anything swap a copied crypto address?
 - [ ] Browser extension permission drift: warn when an update quietly adds powerful permissions

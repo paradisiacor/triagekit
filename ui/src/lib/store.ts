@@ -2,8 +2,8 @@ import { useSyncExternalStore } from 'react';
 import { call, on } from './api';
 import type { AppState, ScanDetail, ScanSummary, Settings, Counts, Verdict } from './types';
 
-export type Route = 'overview' | 'scan' | 'findings' | 'history' | 'protection' | 'settings' | 'about' | 'doctor';
-export interface CheckState { name: string; state: 'wait' | 'run' | 'ok'; ms?: number; t0?: number }
+export type Route = 'overview' | 'scan' | 'findings' | 'history' | 'protection' | 'settings' | 'about' | 'doctor' | 'safestart';
+export interface CheckState { name: string; state: 'wait' | 'run' | 'ok'; ms?: number; t0?: number; outcome?: 'ok' | 'skipped' | 'failed'; note?: string | null }
 export interface ScanRun { running: boolean; quick: boolean; deep?: boolean; doctor?: boolean; checks: CheckState[]; index: number; total: number; status: string; started: number; stopping: boolean;
   result: null | { id: number; score: number; verdict: Verdict; counts: Counts; newCount: number; resolvedCount: number } }
 export interface Toast { id: number; text: string; kind: 'ok' | 'err' }
@@ -13,7 +13,7 @@ export interface State {
 }
 
 const idleScan: ScanRun = { running: false, quick: false, checks: [], index: 0, total: 0, status: '', started: 0, stopping: false, result: null };
-const ROUTES = ['overview', 'scan', 'findings', 'history', 'protection', 'settings', 'about', 'doctor'];
+const ROUTES = ['overview', 'scan', 'findings', 'history', 'protection', 'settings', 'about', 'doctor', 'safestart'];
 const initialRoute = (ROUTES.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview') as Route;
 let state: State = { route: initialRoute, app: null, scans: [], detail: null, settings: null, scan: idleScan, toasts: [], focusRule: null, loaded: false };
 const subs = new Set<() => void>();
@@ -70,7 +70,7 @@ on('scan.checkStart', (d) => set((s) => ({ scan: { ...s.scan, checks: s.scan.che
 // checks are revealed one at a time (about 0.4 s apart) and the result screen waits until all are shown. This only
 // paces the display: the checks themselves never run slower.
 const REVEAL_MS = 420;
-const measured = new Map<string, number>();
+const measured = new Map<string, { ms: number; outcome?: 'ok' | 'skipped' | 'failed'; note?: string | null }>();
 const reveal: { name: string; index: number; total: number }[] = [];
 let revealTimer: ReturnType<typeof setInterval> | null = null;
 let drained: (() => void)[] = [];
@@ -78,7 +78,8 @@ function revealNext() {
   const d = reveal.shift();
   if (!d) { if (revealTimer) clearInterval(revealTimer); revealTimer = null; const w = drained; drained = []; w.forEach((f) => f()); return; }
   set((s) => {
-    const checks = s.scan.checks.map((c): CheckState => c.name === d.name ? { ...c, state: 'ok', ms: measured.get(d.name) ?? c.ms } : c);
+    const m = measured.get(d.name);
+    const checks = s.scan.checks.map((c): CheckState => c.name === d.name ? { ...c, state: 'ok', ms: m?.ms ?? c.ms, outcome: m?.outcome ?? 'ok', note: m?.note } : c);
     return { scan: { ...s.scan, checks, index: Math.max(s.scan.index, checks.filter((c) => c.state === 'ok').length), total: d.total, status: '' } };
   });
 }
@@ -90,7 +91,7 @@ on('scan.progress', (d) => {
   reveal.push({ name: d.name, index: d.index, total: d.total });
   if (!revealTimer) { revealNext(); revealTimer = setInterval(revealNext, REVEAL_MS); }
 });
-on('scan.checkDone', (d) => { measured.set(d.name, d.ms); });
+on('scan.checkDone', (d) => { measured.set(d.name, { ms: d.ms, outcome: d.state, note: d.note }); });
 on('scan.status', (d) => set((s) => ({ scan: { ...s.scan, status: d.text } })));
 on('scan.finished', async (d) => {
   await whenRevealed();

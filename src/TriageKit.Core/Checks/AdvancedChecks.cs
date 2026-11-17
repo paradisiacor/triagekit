@@ -528,8 +528,9 @@ public sealed class HiddenPersistenceCheck : ICheck
             if (hidden.Contains(name))
                 ctx.Add(Severity.High, "Accounts", $"Hidden user account: {name}", "This enabled account is hidden from the sign-in screen.", "Attackers hide backdoor accounts this way. Delete it if you didn't create it.", new { name, sid }, "T1564.002", "account.hidden");
             if (a.B("PasswordRequired") == false && !sid.EndsWith("-501"))
-                // Common on home PCs (also with Microsoft accounts) and not proof of an empty password, so Low.
-                ctx.Add(Severity.Low, "Accounts", $"Windows doesn't require a password for: {name}", "This account is allowed to have an empty password. That doesn't mean it has one; with a Microsoft account or PIN it is usually fine.", "If the account really has no password, set one (Settings > Accounts > Sign-in options).", new { name }, "T1078.003", "account.no-password");
+                // Common on home PCs (also with Microsoft accounts) and not proof of an empty password: Info, so it doesn't
+                // cost points or show up as something to fix.
+                ctx.Add(Severity.Info, "Accounts", $"Windows doesn't require a password for: {name}", "This account is allowed to have an empty password. That doesn't mean it has one; with a Microsoft account or PIN it is usually fine.", "If the account really has no password, set one (Settings > Accounts > Sign-in options).", new { name }, "T1078.003", "account.no-password");
         }
         return new { Items = rows, Accounts = accounts };
     }

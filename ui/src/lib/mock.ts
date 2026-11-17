@@ -8,6 +8,40 @@ function highlights(fs: Finding[]): Highlight[] {
   for (const f of fs) { if (f.severity === 'Low' || f.severity === 'Info') continue; const k = f.ruleId || f.title; const h = m.get(k); if (h) h.count++; else m.set(k, { ...f, count: 1 }); }
   return [...m.values()].map((h) => h.count > 1 ? { ...h, title: `${h.title} (+${h.count - 1} similar)` } : h).slice(0, 5);
 }
+const sampleCheck = {
+  target: 'C:\\Users\\alex\\Downloads\\Cool-Game-Repack.zip', name: 'Cool-Game-Repack.zip', started: new Date().toISOString(), seconds: 6.4, verdict: 'Dangerous',
+  headline: 'Dangerous. Don\'t run it.', summary: 'TriageKit found signs that this download is built to infect the PC. Get the program from its official website or store instead.',
+  downloadedFrom: 'mega.nz', files: 214, programs: 9, archives: 2, onlineLookups: true,
+  notChecked: ['Cool-Game-Repack.zip » Cool Game/data2.bin: expands to more than 1,000 times its packed size, only the start was checked'],
+  findings: [
+    { severity: 'High', title: 'Instructions to switch off your antivirus: README.txt', detail: 'Cool-Game-Repack.zip » Cool Game/README.txt\nIt says: "IMPORTANT before installing please disable Windows Defender real-time protection, the crack is a false positive". Real software never needs your protection switched off. This is the most common way malware gets past antivirus.', recommendation: 'Don\'t follow these instructions and don\'t run the download. Delete it.', ruleId: 'safestart.disable-av-instructions' },
+    { severity: 'High', title: 'Program padded to an unusual size: setup.exe', detail: 'Cool-Game-Repack.zip » Cool Game/setup.exe\nThe program is 742 MB, but 739 MB of that is filler added after the real program. Malware does this so it\'s too big for antivirus cloud scans and upload sites.', recommendation: 'Don\'t run it. Real games and installers keep their data in separate files, not as filler inside the .exe.', ruleId: 'safestart.padded' },
+    { severity: 'Medium', title: 'Script packed into an unsigned program: crack/launcher.exe', detail: 'Cool-Game-Repack.zip » Cool Game/crack/launcher.exe\nThis program is a Python (PyInstaller) script wrapped into an .exe and isn\'t signed. Most info stealers that target gamers are built exactly like this.', recommendation: 'Only run it if you trust its author and expected a tool like this.', ruleId: 'safestart.packed-script' },
+  ],
+  items: [
+    { path: 'Cool-Game-Repack.zip » Cool Game/setup.exe', kind: 'Program', size: 778043392, signature: 'not checked (too large)', risk: 'High', reasons: ['Program padded to an unusual size: setup.exe'] },
+    { path: 'Cool-Game-Repack.zip » Cool Game/README.txt', kind: 'Text', size: 1840, signature: 'n/a', risk: 'High', reasons: ['Instructions to switch off your antivirus: README.txt'] },
+    { path: 'Cool-Game-Repack.zip » Cool Game/crack/launcher.exe', kind: 'Program', size: 9431040, signature: 'not signed', risk: 'Medium', reasons: ['Script packed into an unsigned program: crack/launcher.exe'] },
+    { path: 'Cool-Game-Repack.zip » Cool Game/redist/vc_redist.x64.exe', kind: 'Program', size: 25165824, signature: 'valid', signer: 'Microsoft Corporation', risk: 'Info', reasons: [] },
+    { path: 'Cool-Game-Repack.zip » Cool Game/data2.bin', kind: 'Other', size: 4294967296, signature: 'n/a', risk: 'Info', reasons: [], note: 'only the start was checked' },
+  ],
+  stopped: false,
+};
+const sampleWatch = {
+  before: new Date(Date.now() - 9 * 60e3).toISOString(), after: new Date().toISOString(), verdict: 'Dangerous', headline: 'Dangerous changes found.',
+  summary: 'What was installed changed things that malware changes. Look at the red items below. If you don\'t recognise them, uninstall the program, run a full check and change important passwords from another device.',
+  newFindings: [{ severity: 'High', title: 'Defender exclusion: Path C:\\Users\\alex\\AppData\\Roaming\\Microsoft\\Network', detail: 'Defender does not scan anything matching this exclusion. Malware often adds exclusions for itself.', recommendation: 'Remove the exclusion in Windows Security > Virus & threat protection > Exclusions, unless you know exactly why it is there.', ruleId: 'defender.exclusion' }],
+  goneFindings: [],
+  added: [
+    { category: 'Defender exclusion', kind: 'Added', text: 'Path: C:\\Users\\alex\\AppData\\Roaming\\Microsoft\\Network', severity: 'High', why: 'Microsoft Defender now skips this location. Installers almost never need this; malware always wants it.' },
+    { category: 'Startup entry, task or service', kind: 'Added', text: 'Scheduled task \\MicrosoftEdgeUpdateTaskMachineCore2: C:\\Users\\alex\\AppData\\Roaming\\Microsoft\\Network\\svchost.exe', severity: 'High', why: 'This now starts automatically.' },
+    { category: 'hosts file entry', kind: 'Added', text: '127.0.0.1 activation.coolgame-studio.com', severity: 'Medium', why: 'The hosts file now sends a website name somewhere else. Cracks use this to block activation; malware to redirect logins.' },
+    { category: 'Installed program', kind: 'Added', text: 'Cool Game: 1.0.4 (Cool Game Studio)', severity: 'Info', why: 'Installed.' },
+  ],
+  removed: [], unchanged: 806, notes: [],
+};
+const watchState: any = { before: null, last: 'watch_20261117-102000' };
+
 export function createMock(emit: (n: string, d: any) => void) {
   const now = Date.now();
   const p = new URLSearchParams(location.search);
@@ -37,7 +71,8 @@ export function createMock(emit: (n: string, d: any) => void) {
       const ms = p.has('slow') ? 4000 : 120 + (i % 4) * 90;
       await sleep(ms);
       if (p.has('hold') && i === 5) return;
-      emit('scan.checkDone', { name: checks[i], ms });
+      const skip = /Autoruns|quick scan/i.test(checks[i]);
+      emit('scan.checkDone', { name: checks[i], ms, state: skip ? 'skipped' : 'ok', note: skip ? (/Autoruns/.test(checks[i]) ? 'tools\\Sysinternals\\autorunsc64.exe not found' : 'Off (Defender may remove what it finds)') : null });
       emit('scan.progress', { name: checks[i], index: i + 1, total: checks.length });
     }
     state.scanning = false; emit('scan.finished', { id: 6, score: 58, verdict: 'At risk', counts: counts(fs), newCount: 1, resolvedCount: 3 });
@@ -47,6 +82,24 @@ export function createMock(emit: (n: string, d: any) => void) {
   return async (cmd: string, args: any) => {
     await sleep(30);
     switch (cmd) {
+      case 'safestart.pick': return { token: 't1', name: args.folder ? 'Cool Game Repack' : 'Cool-Game-Repack.zip', path: 'C:\\Users\\alex\\Downloads\\' + (args.folder ? 'Cool Game Repack' : 'Cool-Game-Repack.zip'), folder: !!args.folder, size: 734003200 };
+      case 'safestart.check': {
+        emit('safestart.started', { name: 'Cool-Game-Repack.zip' });
+        let n = 0; const files = ['Cool Game/setup.exe', 'Cool Game/data1.bin', 'Cool Game/README.txt', 'Cool Game/crack/steam_api64.dll', 'Cool Game/redist/vc_redist.x64.exe'];
+        const t = setInterval(() => { emit('safestart.progress', { text: 'Cool-Game-Repack.zip » ' + files[n % files.length], files: ++n * 37 }); if (n >= 6) { clearInterval(t); emit('safestart.done', { id: 'check_20261117-101500', result: sampleCheck }); } }, 450);
+        return { ok: true };
+      }
+      case 'safestart.cancel': return true;
+      case 'safestart.history': return [{ id: 'check_20261117-101500', name: 'Cool-Game-Repack.zip', verdict: 'Dangerous', started: new Date(now - 3600e3).toISOString(), files: 214 }, { id: 'check_20261116-200000', name: 'OBS-Studio-31.0-Windows-x64-Installer.exe', verdict: 'NoThreatsFound', started: new Date(now - 26 * 3600e3).toISOString(), files: 1 }];
+      case 'safestart.get': return String(args.id).startsWith('watch') ? sampleWatch : sampleCheck;
+      case 'watch.state': return watchState;
+      case 'watch.before': case 'watch.after': {
+        const after = cmd === 'watch.after'; const names = ['System posture', 'Antivirus & Defender', 'Autostarts & persistence', 'Hidden persistence & accounts', 'Root certificates', 'Drivers', 'Browser extensions', 'Installed software', 'Network', 'Windows hardening'];
+        emit('watch.started', { after, total: names.length }); let i = 0;
+        const t = setInterval(() => { i++; emit('watch.progress', { name: names[i - 1], index: i, total: names.length }); if (i >= names.length) { clearInterval(t); if (!after) watchState.before = { taken: new Date().toISOString(), machine: 'DESKTOP-7Q2K', items: 812, findings: 9 }; emit('watch.done', after ? { after, id: 'watch_20261117-102000', result: sampleWatch } : { after }); } }, 300);
+        return { ok: true };
+      }
+      case 'watch.discard': watchState.before = null; return { ok: true };
       case 'app.state': return state;
       case 'app.theme': return true;
       case 'scans.list': return scans;

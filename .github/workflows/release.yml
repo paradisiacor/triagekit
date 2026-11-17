@@ -30,7 +30,15 @@ jobs:
         with: { global-json-file: global.json }
       - run: dotnet test TriageKit.sln -c Release
       - run: dotnet publish src/TriageKit.Cli -c Release -o artifacts/TriageKit
-      - run: artifacts/TriageKit/TriageKit.exe --quick --offline --no-open --no-pause --yes --out artifacts/smoke
+      - name: Smoke scan (quick check, offline)
+        shell: pwsh
+        timeout-minutes: 30
+        run: |
+          # TriageKit.exe is a Windows app: wait for it explicitly. Exit codes 0/10/20/30 are scan verdicts, not errors.
+          $p = Start-Process -FilePath artifacts/TriageKit/TriageKit.exe -ArgumentList '--quick','--offline','--no-open','--no-pause','--yes','--out','artifacts/smoke' -Wait -PassThru -NoNewWindow
+          Write-Host "Scan exit code: $($p.ExitCode)"
+          if ($p.ExitCode -notin 0,10,20,30) { throw "Scan failed with exit code $($p.ExitCode)" }
+          if (-not (Get-ChildItem artifacts/smoke -Recurse -Filter report.html)) { throw "No report was written" }
       - uses: actions/upload-artifact@v4
         id: upload
         with: { name: TriageKit-unsigned, path: artifacts/TriageKit/TriageKit.exe, if-no-files-found: error }

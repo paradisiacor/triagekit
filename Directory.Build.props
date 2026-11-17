@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <Version>0.14.0</Version>
+    <Version>0.15.0</Version>
     <Company>TriageKit Project</Company>
     <Product>TriageKit</Product>
     <Copyright>Copyright (c) 2026</Copyright>

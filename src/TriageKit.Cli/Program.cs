@@ -74,6 +74,8 @@ internal static class Program
                 return 0;
             case "status":
                 return PrintStatus();
+            case "check":
+                return CheckDownload(a, version);
             case "cli":
             case null:
                 return InteractiveScan(a, version, pauseAtEnd: _ownConsole);
@@ -178,6 +180,28 @@ internal static class Program
         Console.WriteLine("  Nothing on this PC will be changed.\n");
     }
 
+    /// <summary>Safe Start from the command line: TriageKit.exe check &lt;file or folder&gt; [--offline].
+    /// Exit codes: 0 no threats found, 10 suspicious, 20 dangerous, 30 known malware, 1 error.</summary>
+    private static int CheckDownload(Args a, string version)
+    {
+        if (a.Positional(1) is not string target) { Console.WriteLine("Usage: TriageKit.exe check <file or folder> [--offline]"); return 1; }
+        var baseDir = AppContext.BaseDirectory;
+        var cfg = AppConfig.Load(a.Value("--config") ?? Path.Combine(baseDir, "config.json"), m => Console.Error.WriteLine(m));
+        try
+        {
+            Console.WriteLine($"Checking {target} (nothing is opened or run)...");
+            var r = ScanRunner.CheckDownload(new ScanRequest { BaseDirectory = baseDir, OutputRoot = Path.Combine(baseDir, "Reports"), Config = cfg, Offline = a.Has("--offline") }, version, target, null);
+            Console.WriteLine();
+            Console.WriteLine(r.Headline);
+            Console.WriteLine(r.Summary);
+            Console.WriteLine($"{r.Files} files, {r.Programs} programs and scripts, {r.Archives} archives, {r.Seconds} s.");
+            foreach (var f in r.Findings.OrderBy(f => f.Severity)) { Console.WriteLine(); Console.WriteLine($"[{f.Severity}] {f.Title}"); Console.WriteLine("  " + f.Detail.Replace("\n", "\n  ")); Console.WriteLine("  -> " + f.Recommendation); }
+            if (r.NotChecked.Count > 0) { Console.WriteLine(); Console.WriteLine("Couldn't be checked:"); foreach (var n in r.NotChecked.Take(30)) Console.WriteLine("  " + n); }
+            return r.Verdict switch { Core.SafeStart.DownloadCheck.Verdict.KnownMalware => 30, Core.SafeStart.DownloadCheck.Verdict.Dangerous => 20, Core.SafeStart.DownloadCheck.Verdict.Suspicious => 10, _ => 0 };
+        }
+        catch (Exception ex) { Console.Error.WriteLine("The check failed: " + ex.Message); return 1; }
+    }
+
     private static void PrintHelp(string version) => Console.WriteLine($@"TriageKit {version} - read-only Windows security triage
 
 Desktop app (default):
@@ -194,6 +218,10 @@ Console scan (for USB/automation; use ""start /wait"" in cmd to get the exit cod
   --config <file>      Use a different config.json
   --allow-unsigned-rules      Load rules\ even if not signed (rule authors only)
   --no-open --no-pause --yes  For automation
+
+Safe Start (check a download without running it):
+  TriageKit.exe check <file or folder> [--offline]
+                       Exit codes: 0 no threats found, 10 suspicious, 20 dangerous, 30 known malware
 
 Installed edition (run as administrator):
   TriageKit.exe install           Install the background agent (daily scans, history, tray alerts)
